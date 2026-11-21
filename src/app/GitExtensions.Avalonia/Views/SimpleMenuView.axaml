@@ -1,0 +1,104 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitExtensions.Desktop.ViewModels"
+             xmlns:views="using:GitExtensions.Desktop.Views"
+             x:Class="GitExtensions.Desktop.Views.SimpleMenuView"
+             x:DataType="vm:MainWindowViewModel">
+
+  <!-- The simple mode's menu bar, like GitHub Desktop: File, View, Repository, Branch, Help. Plain words only; every
+       entry reuses a command of the full interface. -->
+  <Menu x:Name="SimpleMenuBar" Background="{DynamicResource MenuBarBackground}">
+    <MenuItem Header="_File">
+      <MenuItem x:Name="SimpleNewRepositoryItem" Header="_New repository…" Command="{Binding ShowInitCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="RepoCreate" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleAddRepositoryItem" Header="_Add local repository…" InputGesture="Ctrl+O" Command="{Binding BrowseCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="RepoOpen" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleCloneItem" Header="_Clone repository…" Command="{Binding ShowCloneCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="CloneRepoGit" /></MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem x:Name="SimpleOptionsItem" Header="_Options…" InputGesture="Ctrl+OemComma" Command="{Binding OpenSettingsCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="Settings" /></MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem x:Name="SimpleExitItem" Header="E_xit" Command="{Binding ExitCommand}" />
+    </MenuItem>
+
+    <MenuItem Header="_View">
+      <MenuItem x:Name="SimpleViewChangesItem" Header="_Changes" InputGesture="Ctrl+D1" Command="{Binding ShowChangesTabCommand}" IsEnabled="{Binding HasOpenedRepository}" />
+      <MenuItem x:Name="SimpleViewHistoryItem" Header="_History" InputGesture="Ctrl+D2" Command="{Binding ShowHistoryTabCommand}" IsEnabled="{Binding HasOpenedRepository}" />
+      <MenuItem x:Name="SimpleViewOutputItem" Header="Show _output log" ToggleType="CheckBox" IsChecked="{Binding Remote.IsOutputVisible, Mode=OneWay}"
+                Command="{Binding Remote.ToggleOutputCommand}" IsEnabled="{Binding HasOpenedRepository}" />
+      <MenuItem x:Name="SimpleViewStashesItem" Header="Show _stashed changes" Command="{Binding ManageStashesCommand}" IsEnabled="{Binding HasOpenedRepository}" />
+      <Separator />
+      <MenuItem x:Name="SimpleViewShortcutsItem" Header="_Keyboard shortcuts" InputGesture="F1" Command="{Binding ShowShortcutsCommand}" />
+      <Separator />
+      <MenuItem x:Name="SimpleViewFullModeItem" Header="Switch to _full mode" InputGesture="Ctrl+Shift+M" Command="{Binding ToggleSimpleModeCommand}" />
+    </MenuItem>
+
+    <MenuItem Header="_Repository" IsEnabled="{Binding HasOpenedRepository}">
+      <MenuItem x:Name="SimplePushItem" Header="_Push" Command="{Binding PushNowCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="Push" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimplePullItem" Header="P_ull" Command="{Binding PullNowCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="Pull" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleFetchItem" Header="_Fetch" InputGesture="Ctrl+Shift+F" Command="{Binding FetchNowCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="PullFetch" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleCloseRepositoryItem" Header="_Remove from the window" InputGesture="Ctrl+W" Command="{Binding CloseRepositoryCommand}" />
+      <Separator />
+      <MenuItem x:Name="SimpleGitHubAccountItem" Header="GitHub _account…" Command="{Binding OpenGitHubAccountsCommand}" />
+      <MenuItem x:Name="SimpleViewOnGitHubItem" Header="View on _GitHub" Command="{Binding ViewOnGitHubCommand}" IsVisible="{Binding HasGitHubRemote}" />
+      <MenuItem x:Name="SimpleOpenTerminalItem" Header="Open in _terminal" Command="{Binding OpenShellCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="GitForWindows" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleShowInExplorerItem" Header="Show in _Explorer" Command="{Binding OpenFileExplorerCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="BrowseFileExplorer" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleOpenInCodeItem" Header="Open in _Visual Studio Code" Command="{Binding OpenInVisualStudioCodeCommand}" />
+      <Separator IsVisible="{Binding HasGitHubRemote}" />
+      <MenuItem x:Name="SimpleCreateIssueItem" Header="Create _issue on GitHub" Command="{Binding CreateIssueOnGitHubCommand}" IsVisible="{Binding HasGitHubRemote}" />
+      <Separator />
+      <MenuItem x:Name="SimpleRemotesItem" Header="Repository _settings…" Command="{Binding ShowRemotesCommand}" />
+    </MenuItem>
+
+    <MenuItem Header="_Branch" IsEnabled="{Binding HasOpenedRepository}">
+      <MenuItem x:Name="SimpleNewBranchItem" Header="_New branch…" Command="{Binding CreateBranchCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="BranchCreate" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleRenameBranchItem" Header="_Rename…" Command="{Binding RenameCurrentBranchCommand}" />
+      <MenuItem x:Name="SimpleDeleteBranchItem" Header="_Delete…" Command="{Binding ChooseBranchForCommand}" CommandParameter="{x:Static vm:BranchPickerMode.Delete}">
+        <MenuItem.Icon><views:AppIcon IconName="BranchDelete" /></MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem x:Name="SimpleDiscardAllItem" Header="Discard all changes…" Command="{Binding DiscardAllChangesCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="ResetWorkingDirChanges" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleStashAllItem" Header="_Stash all changes" Command="{Binding StashAllChangesCommand}">
+        <MenuItem.Icon><views:AppIcon IconName="Stash" /></MenuItem.Icon>
+      </MenuItem>
+      <Separator />
+      <MenuItem x:Name="SimpleUpdateFromDefaultItem" Header="{Binding UpdateFromDefaultBranchText}" Command="{Binding UpdateFromDefaultBranchCommand}" IsEnabled="{Binding CanUpdateFromDefaultBranch}" />
+      <MenuItem x:Name="SimpleMergeIntoCurrentItem" Header="_Merge into current branch…" Command="{Binding ChooseBranchForCommand}" CommandParameter="{x:Static vm:BranchPickerMode.Merge}">
+        <MenuItem.Icon><views:AppIcon IconName="Merge" /></MenuItem.Icon>
+      </MenuItem>
+      <MenuItem x:Name="SimpleRebaseCurrentItem" Header="R_ebase current branch…" Command="{Binding ChooseBranchForCommand}" CommandParameter="{x:Static vm:BranchPickerMode.Rebase}" />
+      <Separator IsVisible="{Binding HasGitHubRemote}" />
+      <MenuItem x:Name="SimpleViewBranchOnGitHubItem" Header="View branch on GitHub" Command="{Binding ViewBranchOnGitHubCommand}" IsVisible="{Binding HasGitHubRemote}" />
+      <MenuItem x:Name="SimpleCreatePullRequestItem" Header="Create _pull request" Command="{Binding CreatePullRequestOnGitHubCommand}" IsVisible="{Binding HasGitHubRemote}">
+        <MenuItem.Icon><views:AppIcon IconName="PullRequest" /></MenuItem.Icon>
+      </MenuItem>
+    </MenuItem>
+
+    <MenuItem Header="_Help">
+      <MenuItem x:Name="SimpleDocumentationItem" Header="_Documentation" Command="{Binding OpenDocumentationCommand}" />
+      <MenuItem x:Name="SimpleReportIssueItem" Header="_Report an issue" Command="{Binding ReportIssueCommand}" />
+      <MenuItem x:Name="SimpleChangelogItem" Header="_Changelog" Command="{Binding OpenChangelogCommand}" />
+      <Separator />
+      <MenuItem x:Name="SimpleAboutItem" Header="_About" Command="{Binding ShowAboutCommand}" />
+    </MenuItem>
+  </Menu>
+</UserControl>

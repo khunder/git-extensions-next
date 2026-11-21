@@ -13,7 +13,7 @@ public sealed partial class RemoteOperationsViewModel
             _output.AppendLine("> " + commandLine);
         }
 
-        IsOutputVisible = true;
+        IsOutputVisible = IsOutputVisible || ShowOutputWhenRunning;
         FlushOutput();
     }
 

@@ -20,6 +20,64 @@ public sealed partial class ChangesSidebarView : UserControl
         InitializeComponent();
         AddHandler(KeyDownEvent, OnKeyDown, RoutingStrategies.Tunnel);
         MenuKit.AttachBuilt(FileList, row => row is WorkingFileRowViewModel file && DataContext is WorkingChangesViewModel viewModel ? BuildFileMenu(viewModel, file) : null);
+        FileList.SelectionChanged += OnListSelectionChanged;
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private WorkingChangesViewModel? _viewModel;
+    private bool _applyingSelection;
+
+    // The list's selection model knows every selected row, also those scrolled out of view: it is the source of truth.
+    private void OnListSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    {
+        if (!_applyingSelection && DataContext is WorkingChangesViewModel viewModel)
+        {
+            viewModel.ApplyViewSelection([.. FileList.SelectedItems?.OfType<WorkingFileRowViewModel>() ?? []]);
+        }
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (_viewModel is not null)
+        {
+            _viewModel.SelectionSyncRequested -= ShowViewModelSelection;
+        }
+
+        _viewModel = DataContext as WorkingChangesViewModel;
+        if (_viewModel is not null)
+        {
+            _viewModel.SelectionSyncRequested += ShowViewModelSelection;
+            ShowViewModelSelection();
+        }
+    }
+
+    // The view-model selected rows itself (select only, select all, rows rebuilt after a refresh): show that in the list.
+    private void ShowViewModelSelection()
+    {
+        if (_viewModel is not { } viewModel || FileList.Selection is not { } selection)
+        {
+            return;
+        }
+
+        _applyingSelection = true;
+        try
+        {
+            selection.BeginBatchUpdate();
+            selection.Clear();
+            for (int i = 0; i < viewModel.Rows.Count; i++)
+            {
+                if (viewModel.Rows[i].IsSelected)
+                {
+                    selection.Select(i);
+                }
+            }
+
+            selection.EndBatchUpdate();
+        }
+        finally
+        {
+            _applyingSelection = false;
+        }
     }
 
     /// <summary>Puts the keyboard focus into the summary box.</summary>

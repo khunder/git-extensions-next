@@ -66,7 +66,7 @@
               <Border Classes.added="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Added}}"
                       Classes.removed="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Removed}}"
                       Classes.hunk="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Hunk}}">
-                <TextBlock Text="{Binding DisplayText}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap"
+                <TextBlock views:SyntaxText.Line="{Binding}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap"
                            Opacity="{Binding Kind, Converter={x:Static views:DiffLineBrushes.TextOpacity}}" Margin="8,0" />
               </Border>
             </DataTemplate>

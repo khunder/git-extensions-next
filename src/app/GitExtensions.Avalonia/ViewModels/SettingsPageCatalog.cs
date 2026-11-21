@@ -79,6 +79,12 @@ public static partial class SettingsPageCatalog
 
     private static NoticeRow NotAppliedNotice() => new(NotApplied);
 
+    private static void SetAutoRefreshOnFileChanges(bool value)
+    {
+        AppSettings.AutoRefreshOnFileChanges = value;
+        RepositoryWatcher.NotifySettingChanged();
+    }
+
     private static void GeneralRows(SettingsPageViewModel page, SettingsContext context)
     {
         BehaviorSettings behavior = context.Behavior;
@@ -99,6 +105,11 @@ public static partial class SettingsPageCatalog
             B("Follow renames in file history", () => AppSettings.FollowRenamesInFileHistory, v => AppSettings.FollowRenamesInFileHistory = v),
             B("Follow renames: exact matches only", () => AppSettings.FollowRenamesInFileHistoryExactOnly, v => AppSettings.FollowRenamesInFileHistoryExactOnly = v),
             I("Quick search timeout (ms)", () => AppSettings.RevisionGridQuickSearchTimeout, v => AppSettings.RevisionGridQuickSearchTimeout = v, 100, 10000),
+            new HeaderRow("Automatic refresh"),
+            B("Automatically refresh on file changes", () => AppSettings.AutoRefreshOnFileChanges, SetAutoRefreshOnFileChanges,
+                "Watches the working tree and the .git folder and updates the changes, branches and history without F5."),
+            B("Refresh when the window gains focus", () => AppSettings.RefreshOnWindowActivated, v => AppSettings.RefreshOnWindowActivated = v,
+                "Checks the status again when you come back to the app; catches what the file watcher missed."),
             new HeaderRow("Dashboard"),
             I("Number of top repositories", () => AppSettings.MaxTopRepositories, v => AppSettings.MaxTopRepositories = v, 0, 100),
             I("Recent repositories history size", () => AppSettings.RecentRepositoriesHistorySize, v => AppSettings.RecentRepositoriesHistorySize = v, 0, 200),

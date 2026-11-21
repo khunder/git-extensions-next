@@ -1,0 +1,33 @@
+<Styles xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Status boxes: + added (green), • modified (amber), − deleted (red), → renamed (accent), ! conflict (red). -->
+  <Style Selector="Border.status">
+    <Setter Property="Width" Value="14" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="CornerRadius" Value="3" />
+    <Setter Property="BorderThickness" Value="1.5" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="BorderBrush" Value="{DynamicResource FileStatusModifiedBrush}" />
+  </Style>
+  <Style Selector="Border.status Path">
+    <Setter Property="Stroke" Value="{DynamicResource FileStatusModifiedBrush}" />
+    <Setter Property="StrokeThickness" Value="1.5" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.status Ellipse">
+    <Setter Property="Width" Value="5" />
+    <Setter Property="Height" Value="5" />
+    <Setter Property="Fill" Value="{DynamicResource FileStatusModifiedBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Center" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Border.status.added"><Setter Property="BorderBrush" Value="{DynamicResource FileStatusAddedBrush}" /></Style>
+  <Style Selector="Border.status.added Path"><Setter Property="Stroke" Value="{DynamicResource FileStatusAddedBrush}" /></Style>
+  <Style Selector="Border.status.deleted"><Setter Property="BorderBrush" Value="{DynamicResource FileStatusDeletedBrush}" /></Style>
+  <Style Selector="Border.status.deleted Path"><Setter Property="Stroke" Value="{DynamicResource FileStatusDeletedBrush}" /></Style>
+  <Style Selector="Border.status.renamed"><Setter Property="BorderBrush" Value="{DynamicResource AccentTextForeground}" /></Style>
+  <Style Selector="Border.status.renamed Path"><Setter Property="Stroke" Value="{DynamicResource AccentTextForeground}" /></Style>
+  <Style Selector="Border.status.conflict"><Setter Property="BorderBrush" Value="{DynamicResource FileStatusDeletedBrush}" /></Style>
+  <Style Selector="Border.status.conflict Path"><Setter Property="Stroke" Value="{DynamicResource FileStatusDeletedBrush}" /></Style>
+</Styles>

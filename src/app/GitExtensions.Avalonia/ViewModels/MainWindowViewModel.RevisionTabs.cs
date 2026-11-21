@@ -22,6 +22,14 @@ public sealed partial class MainWindowViewModel
         RevisionTabsViewModel tabs = new((path, blame, revision) => FileHistory.OpenAsync(path, blame, revision), options: ViewOptions);
         _revisionTabs = tabs;
         tabs.Diff.WorkingTreeChanged = RefreshChangesAsync;
+        tabs.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(RevisionTabsViewModel.SelectedTabIndex))
+            {
+                OnPropertyChanged(nameof(IsBrowsingAllFiles));
+                OnPropertyChanged(nameof(IsShowingChangedFiles));
+            }
+        };
         PropertyChanged += (_, e) =>
         {
             if (e.PropertyName is nameof(SelectedCommit) or nameof(IsWorkingTreeSelected))

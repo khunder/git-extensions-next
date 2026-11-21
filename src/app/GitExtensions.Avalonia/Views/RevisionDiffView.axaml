@@ -7,6 +7,16 @@
              x:DataType="vm:RevisionDiffViewModel">
 
   <UserControl.Styles>
+    <StyleInclude Source="avares://GitExtensions.Avalonia/Styles/FileStatus.axaml" />
+    <!-- "desktop" (the simple mode's history): GitHub Desktop style file rows, taller, flat list first. -->
+    <Style Selector="Grid.desktopRow"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|RevisionDiffView.desktop Border.fileHeader"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|RevisionDiffView.desktop Grid.desktopRow"><Setter Property="IsVisible" Value="True" /></Style>
+    <Style Selector="views|RevisionDiffView.desktop Grid.classicRow"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|RevisionDiffView.desktop ListBox#FileList ListBoxItem">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="10,0" />
+    </Style>
     <Style Selector="Border.added"><Setter Property="Background" Value="{DynamicResource DiffAddedBackground}" /></Style>
     <Style Selector="Border.removed"><Setter Property="Background" Value="{DynamicResource DiffRemovedBackground}" /></Style>
     <Style Selector="Border.hunk"><Setter Property="Background" Value="{DynamicResource DiffHunkBackground}" /></Style>
@@ -65,11 +75,30 @@
         <ListBox x:Name="FileList" ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" Padding="0" IsVisible="{Binding !ShowTree}">
           <ListBox.ItemTemplate>
             <DataTemplate x:DataType="vm:ChangedFileViewModel">
-              <Grid ColumnDefinitions="16,*,Auto" ColumnSpacing="5" Background="Transparent">
+              <Panel>
+              <Grid Classes="classicRow" ColumnDefinitions="16,*,Auto" ColumnSpacing="5" Background="Transparent">
                 <views:AppIcon IconName="{Binding StatusIcon}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="1" Text="{Binding DisplayName}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding DisplayName}" VerticalAlignment="Center" />
                 <TextBlock Grid.Column="2" Text="staged" FontSize="11" Opacity="0.6" IsVisible="{Binding IsStaged}" VerticalAlignment="Center" />
               </Grid>
+              <!-- The simple mode: like the Changes list, the folder dimmed, the file name bright and the status box on the right. -->
+              <Grid Classes="desktopRow" ColumnDefinitions="*,Auto" ColumnSpacing="8" Background="Transparent" ToolTip.Tip="{Binding DisplayName}">
+                <TextBlock FontSize="12.5" VerticalAlignment="Center" TextTrimming="LeadingCharacterEllipsis">
+                  <Run Text="{Binding DirectoryPrefix}" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" /><Run Text="{Binding FileName}" />
+                </TextBlock>
+                <Border Grid.Column="1" Classes="status" ToolTip.Tip="{Binding Description}"
+                        Classes.added="{Binding IsAdded}" Classes.deleted="{Binding IsDeleted}"
+                        Classes.renamed="{Binding IsRenamed}" Classes.conflict="{Binding IsConflicted}">
+                  <Panel>
+                    <Path Data="M0,3.5 H7 M3.5,0 V7" IsVisible="{Binding IsAdded}" />
+                    <Path Data="M0,3.5 H7" IsVisible="{Binding IsDeleted}" />
+                    <Path Data="M0,3.5 H6 M3.5,1 L6,3.5 L3.5,6" IsVisible="{Binding IsRenamed}" />
+                    <Path Data="M3.5,0 V4.5 M3.5,6 V7" IsVisible="{Binding IsConflicted}" />
+                    <Ellipse IsVisible="{Binding IsModified}" />
+                  </Panel>
+                </Border>
+              </Grid>
+              </Panel>
             </DataTemplate>
           </ListBox.ItemTemplate>
         </ListBox>
@@ -112,11 +141,12 @@
             <DataTemplate x:DataType="diff:DiffLine">
               <Border Classes.added="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Added}}"
                       Classes.removed="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Removed}}"
+                      Classes.fileHeader="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Header}}"
                       Classes.hunk="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Hunk}}">
                 <Grid ColumnDefinitions="44,44,*" Opacity="{Binding Kind, Converter={x:Static views:DiffLineBrushes.TextOpacity}}">
                   <TextBlock Text="{Binding OldNumber}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" Opacity="0.5" TextAlignment="Right" Margin="0,0,6,0" />
                   <TextBlock Grid.Column="1" Text="{Binding NewNumber}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" Opacity="0.5" TextAlignment="Right" Margin="0,0,6,0" />
-                  <TextBlock Grid.Column="2" Text="{Binding DisplayText}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="2" views:SyntaxText.Line="{Binding}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap" VerticalAlignment="Center" />
                 </Grid>
               </Border>
             </DataTemplate>

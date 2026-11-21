@@ -22,7 +22,7 @@ public sealed partial class MainWindowViewModel
     private WorkingChangesViewModel? _changesTab;
 
     /// <summary>The Changes | History tabs are enabled in the View menu.</summary>
-    public bool IsChangesTabEnabled => ViewOptions.ShowChangesTab;
+    public bool IsChangesTabEnabled => ViewOptions.ShowChangesTab || ViewOptions.SimpleMode;
 
     public bool IsChangesTabSelected => IsChangesTabEnabled && SidebarTabIndex == ChangesTabIndex;
 

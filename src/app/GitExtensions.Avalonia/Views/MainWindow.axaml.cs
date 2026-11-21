@@ -3,6 +3,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using GitExtensions.Desktop.Services;
 using GitExtensions.Desktop.ViewModels;
+using GitExtensions.Desktop.Views.ContextMenus;
 
 namespace GitExtensions.Desktop.Views;
 
@@ -20,6 +21,23 @@ public sealed partial class MainWindow : Window
         InitializeShortcuts();
         InitializeViewOptions();
         InitializeDialogs();
+
+        // The simple toolbar's "Current repository" segment lines up with the sidebar, also while the splitter is dragged.
+        SidebarHost.SizeChanged += (_, e) => SimpleToolbar.AlignRepositorySegment(e.NewSize.Width + SidebarSplitter.Bounds.Width);
+
+        // The simple history list offers the same commit menu (and its key shortcuts) as the full revision grid.
+        MenuKit.AttachBuilt(
+            SimpleHistoryList,
+            row => row is CommitItemViewModel commit && DataContext is MainWindowViewModel viewModel
+                ? RevisionGridContextMenu.Build(viewModel, commit, viewModel.Actions.Clipboard ?? new TopLevelClipboardService(this))
+                : null);
+        SimpleHistoryList.KeyDown += (_, e) =>
+        {
+            if (DataContext is MainWindowViewModel viewModel && RevisionGridContextMenu.TryHandleKey(viewModel, e))
+            {
+                e.Handled = true;
+            }
+        };
     }
 
     private const double MinRightAreaWidth = 280;

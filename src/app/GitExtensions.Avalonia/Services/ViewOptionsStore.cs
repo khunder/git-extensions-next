@@ -28,7 +28,9 @@ public sealed record ViewOptionsSettings(
     bool ShowRemoteBranches = true,
     bool ShowTags = true,
     bool ShowFilterBar = true,
-    bool ShowChangesTab = false);
+    bool ShowChangesTab = false,
+    bool SimpleMode = false,
+    bool SimpleHistoryGraph = false);
 
 /// <summary>Persists the <see cref="ViewOptionsSettings"/> in a small JSON file; the instance can be replaced for tests.</summary>
 public sealed class ViewOptionsStore

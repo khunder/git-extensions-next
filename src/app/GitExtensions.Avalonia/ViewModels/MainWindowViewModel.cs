@@ -70,6 +70,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         InitializeDashboard();
         InitializeNavigation();
         InitializeChangesTab();
+        InitializeAutoRefresh();
+        InitializeSimpleMode();
+        InitializeUnpushed();
     }
 
     public RecentRepositoriesViewModel Recent { get; }
@@ -115,6 +118,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         CancelHistoryReload();
+        StopWatching();
         _loadCancellation = new CancellationTokenSource();
         CancellationToken cancellationToken = _loadCancellation.Token;
 
@@ -145,6 +149,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
             RepositoryPath = module.WorkingDir;
             _module = module;
+            StartWatching(module);
             Diff = new FileDiffViewModel(module, RefreshChangesAsync, message => ErrorMessage = message);
             Commit = CreateCommitViewModel(module);
             HasOpenedRepository = true;
@@ -203,7 +208,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
     /// <summary>
     ///  Reloads the list of changed files (e.g. after staging) and keeps the selection when possible.
     /// </summary>
-    public async Task RefreshChangesAsync()
+    public Task RefreshChangesAsync() => RefreshChangesAsync(changedPaths: null);
+
+    /// <param name="changedPaths">
+    ///  The working tree paths known to have changed, or <see langword="null"/> when unknown. When the list of changed files
+    ///  is the same as before, only the diff of the selected file is shown again, and only when that file is among them:
+    ///  an automatic refresh then leaves the lists, the selection and the scroll position alone.
+    /// </param>
+    private async Task RefreshChangesAsync(IReadOnlyCollection<string>? changedPaths)
     {
         GitModule? module = _module;
         if (module is null)
@@ -211,7 +223,48 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        ChangedFileViewModel? previous = SelectedChangedFile;
+        if (changedPaths is not null)
+        {
+            List<ChangedFileViewModel> current;
+            try
+            {
+                string? statusError;
+                (current, statusError) = await Task.Run(() => ReadChanges(module));
+                if (statusError is not null)
+                {
+                    ErrorMessage = statusError;
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorMessage = $"Could not read the changes of {module.WorkingDir}: {ex.Message}";
+                return;
+            }
+
+            if (!ReferenceEquals(_module, module))
+            {
+                return;
+            }
+
+            if (HasSameChanges(ChangedFiles, current))
+            {
+                if (SelectedChangedFile is { } selected && Diff is { } shownDiff && changedPaths.Contains(selected.Name))
+                {
+                    await shownDiff.ShowAsync(selected);
+                }
+
+                if (changedPaths.Count > 0 && IsChangesTabSelected && ChangesTab is { } tab)
+                {
+                    await tab.RefreshAsync();
+                }
+
+                return;
+            }
+
+            await ShowChangesAsync(current);
+            return;
+        }
+
         List<ChangedFileViewModel> changes;
         try
         {
@@ -229,6 +282,23 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
+        await ShowChangesAsync(changes);
+    }
+
+    // Two status lists show the same thing when every entry has the same path, kind and stage.
+    private static bool HasSameChanges(IReadOnlyList<ChangedFileViewModel> shown, IReadOnlyList<ChangedFileViewModel> read)
+        => shown.Count == read.Count
+           && shown.Zip(read).All(pair =>
+               pair.First.Name == pair.Second.Name
+               && pair.First.Status == pair.Second.Status
+               && pair.First.IsStaged == pair.Second.IsStaged
+               && pair.First.Item.OldName == pair.Second.Item.OldName
+               && pair.First.Item.IsTracked == pair.Second.Item.IsTracked
+               && pair.First.Item.IsSubmodule == pair.Second.Item.IsSubmodule);
+
+    private async Task ShowChangesAsync(List<ChangedFileViewModel> changes)
+    {
+        ChangedFileViewModel? previous = SelectedChangedFile;
         ChangedFiles.ReplaceAll(changes);
 
         // Prefer the same entry; a file that just moved between index and work tree keeps its name.
@@ -301,7 +371,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     // git status failures arrive as a fake "Git Error" entry; show them as an error instead of as a file.
     private static (List<ChangedFileViewModel> Changes, string? Error) ReadChanges(GitModule module)
     {
-        (List<GitItemStatus> items, string? error) = GitErrorMessages.SplitStatusError(module.GetAllChangedFiles(), module.WorkingDir);
+        (List<GitItemStatus> items, string? error) = GitErrorMessages.SplitStatusError(module.GetAllChangedFilesWithoutLocks(), module.WorkingDir);
         return (items.Select(item => new ChangedFileViewModel(item)).ToList(), error);
     }
 

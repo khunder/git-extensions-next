@@ -852,6 +852,20 @@ public static partial class AppSettings
         set => SetBool("refreshcommitdialogonformfocus", value);
     }
 
+    /// <summary>Watch the working tree and the git directory and refresh the UI when files change outside the app.</summary>
+    public static bool AutoRefreshOnFileChanges
+    {
+        get => GetBool("autorefreshonfilechanges", true);
+        set => SetBool("autorefreshonfilechanges", value);
+    }
+
+    /// <summary>Check the repository status again when the main window gains focus.</summary>
+    public static bool RefreshOnWindowActivated
+    {
+        get => GetBool("refreshonwindowactivated", true);
+        set => SetBool("refreshonwindowactivated", value);
+    }
+
     public static bool StageInSuperprojectAfterCommit
     {
         get => GetBool("stageinsuperprojectaftercommit", true);

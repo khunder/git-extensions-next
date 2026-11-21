@@ -22,6 +22,18 @@
       <SolidColorBrush x:Key="DiffRemovedGutterBackground" Color="#FFF3F3" />
       <SolidColorBrush x:Key="DiffHunkBackground" Color="#DAE6FA" />
       <SolidColorBrush x:Key="DiffSelectionOverlay" Color="#59308FE0" />
+      <SolidColorBrush x:Key="TagPillBackground" Color="#1F000000" />
+      <SolidColorBrush x:Key="UnpushedPillBackground" Color="#8C959F" />
+      <!-- The simple mode, in GitHub Desktop's neutral cool greys (Fluent's acrylic popups look warm next to it). -->
+      <SolidColorBrush x:Key="SimpleToolbarBackground" Color="#F6F8FA" />
+      <SolidColorBrush x:Key="PopupBackground" Color="#FFFFFF" />
+      <SolidColorBrush x:Key="PopupBorderBrush" Color="#D0D7DE" />
+      <SolidColorBrush x:Key="SyntaxKeywordForeground" Color="#CF222E" />
+      <SolidColorBrush x:Key="SyntaxStringForeground" Color="#0A3069" />
+      <SolidColorBrush x:Key="SyntaxCommentForeground" Color="#6E7781" />
+      <SolidColorBrush x:Key="SyntaxNumberForeground" Color="#0550AE" />
+      <SolidColorBrush x:Key="SyntaxTagForeground" Color="#116329" />
+      <SolidColorBrush x:Key="SyntaxAttributeForeground" Color="#953800" />
       <SolidColorBrush x:Key="RefBadgeBackground" Color="#CFE3FA" />
       <SolidColorBrush x:Key="RefBadgeForeground" Color="#0B3A75" />
       <SolidColorBrush x:Key="SubtleBorderBrush" Color="#1F000000" />
@@ -70,6 +82,17 @@
       <SolidColorBrush x:Key="DiffRemovedGutterBackground" Color="#331A1E" />
       <SolidColorBrush x:Key="DiffHunkBackground" Color="#1F3556" />
       <SolidColorBrush x:Key="DiffSelectionOverlay" Color="#665AA9FF" />
+      <SolidColorBrush x:Key="TagPillBackground" Color="#3DFFFFFF" />
+      <SolidColorBrush x:Key="UnpushedPillBackground" Color="#6E7681" />
+      <SolidColorBrush x:Key="SimpleToolbarBackground" Color="#24292E" />
+      <SolidColorBrush x:Key="PopupBackground" Color="#2D333B" />
+      <SolidColorBrush x:Key="PopupBorderBrush" Color="#444C56" />
+      <SolidColorBrush x:Key="SyntaxKeywordForeground" Color="#FF7B72" />
+      <SolidColorBrush x:Key="SyntaxStringForeground" Color="#A5D6FF" />
+      <SolidColorBrush x:Key="SyntaxCommentForeground" Color="#8B949E" />
+      <SolidColorBrush x:Key="SyntaxNumberForeground" Color="#79C0FF" />
+      <SolidColorBrush x:Key="SyntaxTagForeground" Color="#7EE787" />
+      <SolidColorBrush x:Key="SyntaxAttributeForeground" Color="#FFA657" />
       <SolidColorBrush x:Key="RefBadgeBackground" Color="#1B4474" />
       <SolidColorBrush x:Key="RefBadgeForeground" Color="#D6E8FF" />
       <SolidColorBrush x:Key="SubtleBorderBrush" Color="#33FFFFFF" />

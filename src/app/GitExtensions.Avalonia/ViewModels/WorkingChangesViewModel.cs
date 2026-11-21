@@ -223,7 +223,41 @@ public sealed partial class WorkingChangesViewModel : ObservableObject, IDisposa
             _syncingSelection = false;
         }
 
+        SelectionSyncRequested?.Invoke();
         OnSelectionChanged(row is not null);
+    }
+
+    /// <summary>
+    ///  Raised when the view-model changed the selection itself (select only, select all, rows rebuilt), so the list shows it.
+    /// </summary>
+    public event Action? SelectionSyncRequested;
+
+    /// <summary>
+    ///  Takes the selection of the list. The list is the source of truth for clicks: binding each item container's
+    ///  IsSelected loses deselections of rows scrolled out of view (their containers are recycled), which left stale rows
+    ///  selected ("3 files selected" after one click).
+    /// </summary>
+    public void ApplyViewSelection(IReadOnlyCollection<WorkingFileRowViewModel> selected)
+    {
+        if (_syncingSelection)
+        {
+            return;
+        }
+
+        _syncingSelection = true;
+        try
+        {
+            foreach (WorkingFileRowViewModel each in Rows)
+            {
+                each.IsSelected = selected.Contains(each);
+            }
+        }
+        finally
+        {
+            _syncingSelection = false;
+        }
+
+        OnSelectionChanged(selected.Count > 0);
     }
 
     /// <summary>Selects every listed file.</summary>
@@ -242,6 +276,7 @@ public sealed partial class WorkingChangesViewModel : ObservableObject, IDisposa
             _syncingSelection = false;
         }
 
+        SelectionSyncRequested?.Invoke();
         OnSelectionChanged(Rows.Count > 0);
     }
 
@@ -463,6 +498,8 @@ public sealed partial class WorkingChangesViewModel : ObservableObject, IDisposa
         {
             _syncingSelection = false;
         }
+
+        SelectionSyncRequested?.Invoke();
 
         OnPropertyChanged(nameof(ChangedFilesHeader));
         OnPropertyChanged(nameof(AllIncluded));

@@ -52,6 +52,7 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
     private string _refs = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(MessageBody), nameof(HasMessageBody))]
     private string _message = string.Empty;
 
     [ObservableProperty]
@@ -102,6 +103,11 @@ public sealed partial class CommitDetailsViewModel : ObservableObject
 
     /// <summary>Gets a value indicating whether the branches, tags and nearest tag are still being looked up.</summary>
     public bool IsLoadingExtras => _runningExtras > 0;
+
+    /// <summary>The message without its first line (the subject), for a header that shows the subject separately.</summary>
+    public string MessageBody => Message.IndexOf('\n') is int newLine and >= 0 ? Message[(newLine + 1)..].Trim() : string.Empty;
+
+    public bool HasMessageBody => MessageBody.Length > 0;
 
     public bool HasDescribe => DescribeTag.Length > 0;
 

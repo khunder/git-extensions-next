@@ -32,6 +32,10 @@ public sealed class App : Application
             viewModel.WindowService = new WindowService(viewModel, window);
             desktop.MainWindow = window;
 
+            // Coming back to the app checks the status again (catches anything the file watcher missed).
+            window.Activated += (_, _) => viewModel.OnWindowActiveChanged(isActive: true);
+            window.Deactivated += (_, _) => viewModel.OnWindowActiveChanged(isActive: false);
+
             // A failure in an event handler or command must not close the application: show it in the error banner.
             Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
             {

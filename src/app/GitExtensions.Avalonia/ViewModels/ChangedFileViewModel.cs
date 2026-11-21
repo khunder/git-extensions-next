@@ -48,6 +48,18 @@ public sealed class ChangedFileViewModel
     /// <summary>The folder of the file relative to the working directory (empty at the top level).</summary>
     public string Directory { get; }
 
+    /// <summary>The folder with a trailing slash, shown dimmed before the file name (empty at the top level).</summary>
+    public string DirectoryPrefix => Directory.Length == 0 ? string.Empty : Directory + "/";
+
+    // The status box of the GitHub Desktop style lists (Styles/FileStatus.axaml).
+    public bool IsAdded => Status is "A" or "C";
+
+    public bool IsDeleted => Status == "D";
+
+    public bool IsModified => Status == "M";
+
+    public bool IsRenamed => Status == "R";
+
     /// <summary>The change kind in words, e.g. for a tooltip.</summary>
     public string Description { get; }
 

@@ -10,6 +10,7 @@
 
   <Window.Styles>
     <StyleInclude Source="avares://GitExtensions.Avalonia/Styles/Accessibility.axaml" />
+    <StyleInclude Source="avares://GitExtensions.Avalonia/Styles/SimpleGlyphs.axaml" />
     <Style Selector="TextBlock.mono">
       <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" />
     </Style>
@@ -40,6 +41,77 @@
     <Style Selector="TabStrip#SidebarTabs TabStripItem:selected">
       <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
+    <!-- The simple mode's history list, spaced like GitHub Desktop: one line of subject, one of author and time, a hairline between. The Graph switch shows the full history instead. -->
+    <Style Selector="ListBox#SimpleHistoryList ListBoxItem">
+      <Setter Property="Padding" Value="12,7" />
+      <Setter Property="MinHeight" Value="0" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+    </Style>
+    <!-- Graph: the branch lines run from row to row, so no vertical padding and no hairline (it would cut them). -->
+    <Style Selector="ListBox#SimpleHistoryList.graph ListBoxItem">
+      <Setter Property="Padding" Value="4,0,12,0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="ListBox#SimpleHistoryList.graph StackPanel.commitText">
+      <Setter Property="Margin" Value="4,7,0,7" />
+    </Style>
+    <!-- The Changed files | All files switch of the simple history: flat tabs with an accent underline. -->
+    <Style Selector="RadioButton.segmentTab">
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="TabBorder" Padding="10,4" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent">
+            <ContentPresenter Content="{TemplateBinding Content}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+      <Setter Property="Opacity" Value="0.7" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="RadioButton.segmentTab:checked">
+      <Setter Property="Opacity" Value="1" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="RadioButton.segmentTab:checked /template/ Border#TabBorder">
+      <Setter Property="BorderBrush" Value="{DynamicResource SystemAccentColor}" />
+    </Style>
+
+    <Style Selector="Border.tagPill">
+      <Setter Property="Background" Value="{DynamicResource TagPillBackground}" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="7,1" />
+    </Style>
+    <!-- GitHub Desktop's badge: a small solid pill with a bold white arrow. -->
+    <Style Selector="Border.tagPill.unpushed">
+      <Setter Property="Width" Value="26" />
+      <Setter Property="Height" Value="16" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Background" Value="{DynamicResource UnpushedPillBackground}" />
+    </Style>
+    <Style Selector="Border.tagPill.unpushed Path">
+      <Setter Property="Width" Value="10" />
+      <Setter Property="Height" Value="10" />
+      <Setter Property="Stretch" Value="None" />
+      <Setter Property="Stroke" Value="White" />
+      <Setter Property="StrokeThickness" Value="1.8" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+      <Setter Property="HorizontalAlignment" Value="Center" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- On the selected row the badge turns light, like GitHub Desktop. -->
+    <Style Selector="ListBox#SimpleHistoryList ListBoxItem:selected Border.tagPill.unpushed">
+      <Setter Property="Background" Value="White" />
+    </Style>
+    <Style Selector="ListBox#SimpleHistoryList ListBoxItem:selected Border.tagPill.unpushed Path">
+      <Setter Property="Stroke" Value="#24292E" />
+    </Style>
+    <Style Selector="Border.tagPill > TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
     <Style Selector="Border.countBadge">
       <Setter Property="Background" Value="{DynamicResource SubtleBorderBrush}" />
       <Setter Property="CornerRadius" Value="9" />
@@ -57,8 +129,14 @@
   <DockPanel>
 
     <!-- Main menu and toolbar -->
-    <views:MainMenuView x:Name="MainMenuBar" DockPanel.Dock="Top" />
-    <views:MainToolbarView x:Name="MainToolbar" DockPanel.Dock="Top" />
+    <Panel DockPanel.Dock="Top" IsVisible="{Binding IsFullMode}">
+      <views:MainMenuView x:Name="MainMenuBar" />
+    </Panel>
+    <Panel DockPanel.Dock="Top" IsVisible="{Binding IsFullMode}">
+      <views:MainToolbarView x:Name="MainToolbar" />
+    </Panel>
+    <views:SimpleMenuView x:Name="SimpleMenu" DockPanel.Dock="Top" IsVisible="{Binding IsSimpleMode}" />
+    <views:SimpleToolbarView x:Name="SimpleToolbar" DockPanel.Dock="Top" IsVisible="{Binding IsSimpleMode}" />
 
     <views:OperationBarView x:Name="OperationBar" DockPanel.Dock="Top" DataContext="{Binding Operation}" />
 
@@ -73,10 +151,11 @@
 
     <!-- Status bar -->
     <Border DockPanel.Dock="Bottom" Padding="8,4" BorderThickness="0,1,0,0" Background="{DynamicResource StatusBarBackground}" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-      <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+      <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="12">
         <TextBlock x:Name="StatusText" Text="{Binding Status}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-        <TextBlock x:Name="BranchTrackText" Grid.Column="1" Text="{Binding Refs.CurrentTrackText}" IsVisible="{Binding Refs.HasCurrentTrack}" VerticalAlignment="Center" ToolTip.Tip="{Binding Refs.CurrentTrackToolTip}" />
-        <ProgressBar Grid.Column="2" Width="120" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+        <TextBlock x:Name="AutoRefreshHint" Grid.Column="1" Text="Auto-refresh limited" IsVisible="{Binding AutoRefreshProblem, Converter={x:Static ObjectConverters.IsNotNull}}" ToolTip.Tip="{Binding AutoRefreshProblem}" VerticalAlignment="Center" Opacity="0.7" />
+        <TextBlock x:Name="BranchTrackText" Grid.Column="2" Text="{Binding Refs.CurrentTrackText}" IsVisible="{Binding Refs.HasCurrentTrack}" VerticalAlignment="Center" ToolTip.Tip="{Binding Refs.CurrentTrackToolTip}" />
+        <ProgressBar Grid.Column="3" Width="120" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
       </Grid>
     </Border>
 
@@ -117,10 +196,53 @@
             <TextBlock Text="History" VerticalAlignment="Center" />
           </TabStripItem>
         </TabStrip>
+        <!-- Simple mode, History: a plain list of commits, or the full graph with all its options. -->
+        <Border x:Name="HistoryViewSwitch" DockPanel.Dock="Top" Padding="8,4" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource SubtleBorderBrush}"
+                IsVisible="{Binding ShowHistoryViewSwitch}">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <RadioButton x:Name="HistoryListTab" Classes="segmentTab" GroupName="SimpleHistoryView" Content="List"
+                         IsChecked="{Binding IsHistoryListView, Mode=TwoWay}" ToolTip.Tip="The commits of the branch, newest first" />
+            <RadioButton x:Name="HistoryGraphTab" Classes="segmentTab" GroupName="SimpleHistoryView" Content="Graph"
+                         IsChecked="{Binding IsHistoryGraphView, Mode=TwoWay}" ToolTip.Tip="The branches and the commit graph with all their options" />
+          </StackPanel>
+        </Border>
         <Panel>
-          <Panel IsVisible="{Binding IsHistoryTabSelected}">
+          <Panel IsVisible="{Binding IsFullHistoryVisible}">
             <views:RefsTreeView x:Name="SidebarPanel" DataContext="{Binding Refs}" />
           </Panel>
+          <!-- Simple mode: the commits of the branch, newest first; the selected one is shown on the right. -->
+          <ListBox x:Name="SimpleHistoryList" IsVisible="{Binding IsSimpleHistoryVisible}" ItemsSource="{Binding Commits}" Classes.graph="{Binding IsHistoryGraphView}"
+                   SelectedItem="{Binding SelectedCommit, Mode=TwoWay}" Background="Transparent">
+            <ListBox.ItemTemplate>
+              <DataTemplate x:DataType="vm:CommitItemViewModel">
+                <Grid ColumnDefinitions="Auto,*,Auto" ToolTip.Tip="{Binding AccessibleName}">
+                  <views:CommitGraphCell x:Name="SimpleGraphCell" Row="{Binding Graph}" IsMerge="{Binding IsGraphSquare}" IsHead="{Binding IsCurrentHead}" IsDimmed="{Binding IsDimmed}"
+                                         LaneCount="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).GraphLaneCount}" VerticalAlignment="Stretch"
+                                         IsVisible="{Binding $parent[ListBox].((vm:MainWindowViewModel)DataContext).IsHistoryGraphView}" />
+                  <StackPanel Grid.Column="1" Classes="commitText" Spacing="2">
+                    <TextBlock Text="{Binding Subject}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Border Width="16" Height="16" CornerRadius="8" Background="{Binding AvatarBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Initials}" Foreground="White" FontSize="7" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                      <TextBlock FontSize="11" Opacity="0.7" VerticalAlignment="Center" TextTrimming="CharacterEllipsis">
+                        <Run Text="{Binding Author}" /><Run Text=" · " /><Run Text="{Binding RelativeDate}" />
+                      </TextBlock>
+                    </StackPanel>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <Border Classes="tagPill" IsVisible="{Binding HasTag}">
+                      <TextBlock Text="{Binding TagName}" FontSize="11" />
+                    </Border>
+                    <!-- Not on the remote yet: push to share it (GitHub Desktop's up-arrow badge). -->
+                    <Border x:Name="UnpushedBadge" Classes="tagPill unpushed" IsVisible="{Binding IsUnpushed}" ToolTip.Tip="This commit has not been pushed to the remote repository">
+                      <Path Data="{StaticResource GlyphArrowUpSmall}" />
+                    </Border>
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
           <Panel IsVisible="{Binding IsChangesTabSelected}">
             <views:ChangesSidebarView x:Name="ChangesSidebar" DataContext="{Binding ChangesTab}" />
           </Panel>
@@ -132,7 +254,7 @@
       <Panel Grid.Column="2">
         <!-- The rows have the same minimum as their panes, so neither the splitter nor a stored layout can squeeze the
              tabs below their headers (they would overflow onto the history). -->
-        <Grid x:Name="BrowseRows" IsVisible="{Binding IsHistoryTabSelected}">
+        <Grid x:Name="BrowseRows" IsVisible="{Binding IsFullHistoryVisible}">
           <Grid.RowDefinitions>
             <RowDefinition Height="330*" MinHeight="120" />
             <RowDefinition Height="Auto" />
@@ -143,12 +265,62 @@
           <views:RevisionTabsView x:Name="RevisionTabs" Grid.Row="2" MinHeight="120" />
         </Grid>
 
+        <!-- After the full history on purpose: code and tests that look for "the" revision diff find the full mode's first. -->
+        <!-- Simple mode, like GitHub Desktop: the selected commit's message and author on top, its files (tree) and diff below. -->
+        <DockPanel x:Name="SimpleCommitPanel" IsVisible="{Binding IsSimpleHistoryVisible}">
+          <Border x:Name="SimpleCommitHeader" DockPanel.Dock="Top" Padding="14,10" BorderThickness="1,0,0,1" BorderBrush="{DynamicResource SubtleBorderBrush}"
+                  IsVisible="{Binding SelectedCommit, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Spacing="6">
+              <TextBlock x:Name="SimpleCommitSubject" Text="{Binding SelectedCommit.Subject}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <ScrollViewer MaxHeight="110" IsVisible="{Binding CommitDetails.HasMessageBody}">
+                <SelectableTextBlock Text="{Binding CommitDetails.MessageBody}" Classes="mono" FontSize="12" TextWrapping="Wrap" Opacity="0.85" />
+              </ScrollViewer>
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Width="20" Height="20" CornerRadius="10" Background="{Binding SelectedCommit.AvatarBrush}" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding SelectedCommit.Initials}" Foreground="White" FontSize="9" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock Text="{Binding SelectedCommit.Author}" VerticalAlignment="Center" FontWeight="SemiBold" FontSize="12" />
+                <views:AppIcon IconName="CommitId" VerticalAlignment="Center" Opacity="0.7" />
+                <SelectableTextBlock Text="{Binding SelectedCommit.ShortHash}" Classes="mono" FontSize="12" VerticalAlignment="Center" Opacity="0.8" />
+                <TextBlock Text="{Binding SelectedCommit.RelativeDate}" ToolTip.Tip="{Binding SelectedCommit.DateToolTip}" FontSize="12" Opacity="0.65" VerticalAlignment="Center" />
+                <Border Classes="tagPill" IsVisible="{Binding SelectedCommit.HasTag}" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding SelectedCommit.TagName}" FontSize="11" />
+                </Border>
+                <!-- The commit is only here: say so, with what to do about it. -->
+                <Border x:Name="SimpleCommitUnpushed" Classes="tagPill" IsVisible="{Binding SelectedCommit.IsUnpushed}" VerticalAlignment="Center"
+                        ToolTip.Tip="This commit has not been pushed to the remote repository yet. Use Push to share it.">
+                  <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Path Classes="glyph" Data="{StaticResource GlyphArrowUp}" Width="12" Height="12" />
+                    <TextBlock Text="Not pushed yet" FontSize="11" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+          <!-- Changed files (the diff of this commit) or All files (browse the folders as they were at this commit). -->
+          <Border DockPanel.Dock="Top" Padding="12,6" BorderThickness="1,0,0,1" BorderBrush="{DynamicResource SubtleBorderBrush}"
+                  IsVisible="{Binding SelectedCommit, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <StackPanel Orientation="Horizontal" Spacing="2">
+              <RadioButton x:Name="SimpleChangedFilesTab" Classes="segmentTab" GroupName="SimpleCommitView" Content="Changed files"
+                           IsChecked="{Binding IsShowingChangedFiles, Mode=TwoWay}" ToolTip.Tip="The files this commit changed, with their diff" />
+              <RadioButton x:Name="SimpleAllFilesTab" Classes="segmentTab" GroupName="SimpleCommitView" Content="All files"
+                           IsChecked="{Binding IsBrowsingAllFiles, Mode=TwoWay}" ToolTip.Tip="Browse every folder and file as it was at this commit" />
+            </StackPanel>
+          </Border>
+          <Border BorderThickness="1,0,0,0" BorderBrush="{DynamicResource SubtleBorderBrush}">
+            <Panel>
+              <views:RevisionDiffView x:Name="SimpleCommitDiff" Classes="desktop" DataContext="{Binding RevisionTabs.Diff}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsShowingChangedFiles}" />
+              <views:RevisionFileTreeView x:Name="SimpleCommitFiles" DataContext="{Binding RevisionTabs.FileTree}" IsVisible="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).IsBrowsingAllFiles}" />
+            </Panel>
+          </Border>
+        </DockPanel>
+
         <!-- Changes tab: the diff of the selected file, or the merge conflict resolver for a conflicted one. -->
         <Border x:Name="ChangesDiffArea" IsVisible="{Binding IsChangesTabSelected}" BorderThickness="1,0,0,0" BorderBrush="{DynamicResource SubtleBorderBrush}">
           <Panel DataContext="{Binding ChangesTab}" x:DataType="vm:WorkingChangesViewModel">
             <Panel IsVisible="{Binding !IsShowingStash}">
               <Border IsVisible="{Binding !Resolver.IsActive}">
-                <views:DiffView x:Name="ChangesDiff" DataContext="{Binding Diff}" />
+                <views:DiffView x:Name="ChangesDiff" Classes="noStaging" DataContext="{Binding Diff}" />
               </Border>
               <views:ConflictResolverView x:Name="ChangesConflictResolver" DataContext="{Binding Resolver}" IsVisible="{Binding IsActive}" />
 

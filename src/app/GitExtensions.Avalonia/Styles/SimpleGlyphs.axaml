@@ -1,0 +1,42 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <!-- Line icons of the simple mode, drawn in the theme's text color like GitHub Desktop's octicons (the PNG icons of the
+       full mode are colored bitmaps that do not follow a dark theme). 16x16 coordinates, used as <Path Classes="glyph" />. -->
+  <Styles.Resources>
+    <StreamGeometry x:Key="GlyphRepository">M3,2.5 H12.5 V13.5 H4.5 A1.5,1.5 0 0 1 3,12 Z M3,12 A1.5,1.5 0 0 1 4.5,10.5 H12.5 M6,5 H10</StreamGeometry>
+    <StreamGeometry x:Key="GlyphBranch">M4.5,2 A1.5,1.5 0 1 0 4.5,5 A1.5,1.5 0 1 0 4.5,2 Z M4.5,11 A1.5,1.5 0 1 0 4.5,14 A1.5,1.5 0 1 0 4.5,11 Z M11.5,2 A1.5,1.5 0 1 0 11.5,5 A1.5,1.5 0 1 0 11.5,2 Z M4.5,5 V11 M11.5,5 C11.5,8.5 4.5,7.5 4.5,11</StreamGeometry>
+    <StreamGeometry x:Key="GlyphMerge">M4.5,2 A1.5,1.5 0 1 0 4.5,5 A1.5,1.5 0 1 0 4.5,2 Z M4.5,11 A1.5,1.5 0 1 0 4.5,14 A1.5,1.5 0 1 0 4.5,11 Z M11.5,7 A1.5,1.5 0 1 0 11.5,10 A1.5,1.5 0 1 0 11.5,7 Z M4.5,5 V11 M4.5,5 C4.5,7.5 7,8.5 10,8.5</StreamGeometry>
+    <StreamGeometry x:Key="GlyphUpdate">M8,2 V10 M4.5,6.5 L8,10 L11.5,6.5 M3,13.5 H13</StreamGeometry>
+    <StreamGeometry x:Key="GlyphArrowUp">M8,13.5 V2.5 M3.5,7 L8,2.5 L12.5,7</StreamGeometry>
+    <StreamGeometry x:Key="GlyphArrowUpSmall">M5,9 V1.5 M1.8,4.7 L5,1.5 L8.2,4.7</StreamGeometry>
+    <StreamGeometry x:Key="GlyphPerson">M8,2.5 A2.75,2.75 0 1 0 8,8 A2.75,2.75 0 1 0 8,2.5 Z M3,14 C3,11 5.2,9.5 8,9.5 C10.8,9.5 13,11 13,14</StreamGeometry>
+    <StreamGeometry x:Key="GlyphPlus">M8,3 V13 M3,8 H13</StreamGeometry>
+    <StreamGeometry x:Key="GlyphCheck">M3,8.5 L6.5,12 L13,4.5</StreamGeometry>
+    <StreamGeometry x:Key="GlyphChevronDown">M4,6 L8,10 L12,6</StreamGeometry>
+    <StreamGeometry x:Key="GlyphFolder">M2,4 H6 L7.5,5.5 H14 V12.5 H2 Z</StreamGeometry>
+    <StreamGeometry x:Key="GlyphMore">M3,8 H3.2 M8,8 H8.2 M13,8 H13.2</StreamGeometry>
+  </Styles.Resources>
+
+  <!-- Menus opened from the simple toolbar use the same cool popup colors as its drop-downs. -->
+  <Style Selector="MenuFlyoutPresenter">
+    <Setter Property="Background" Value="{DynamicResource PopupBackground}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource PopupBorderBrush}" />
+  </Style>
+
+  <Style Selector="Path.glyph">
+    <Setter Property="Width" Value="16" />
+    <Setter Property="Height" Value="16" />
+    <Setter Property="Stretch" Value="None" />
+    <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    <Setter Property="StrokeThickness" Value="1.4" />
+    <Setter Property="StrokeLineCap" Value="Round" />
+    <Setter Property="StrokeJoin" Value="Round" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+  </Style>
+  <Style Selector="Path.glyph.dim">
+    <Setter Property="Opacity" Value="0.65" />
+  </Style>
+  <Style Selector="Path.glyph.more">
+    <Setter Property="StrokeThickness" Value="2.4" />
+  </Style>
+</Styles>
