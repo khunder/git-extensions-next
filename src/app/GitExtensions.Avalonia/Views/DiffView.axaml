@@ -21,6 +21,17 @@
     <Style Selector="Border.hunk"><Setter Property="Background" Value="{DynamicResource DiffHunkBackground}" /></Style>
 
     <!-- "compact" (the Commit window, like the original): no file name and stage buttons above the diff; the bar only appears for a line selection. -->
+    <!-- "noStaging" (the Changes tab): files are included with their check boxes, so no stage buttons, hunk buttons or line
+         selection bar. Discarding stays in the file context menu. -->
+    <!-- Hidden through their hosts: the controls themselves bind IsVisible, and a local binding wins over a style. -->
+    <Style Selector="views|DiffView.noStaging Panel#SelectionToolbarHost"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|DiffView.noStaging StackPanel.hunkActions"><Setter Property="IsVisible" Value="False" /></Style>
+    <!-- No git plumbing above the diff (the "diff", "index" and old/new file lines): the file name is already shown, like GitHub Desktop. -->
+    <Style Selector="views|DiffView.noStaging Border.fileHeader"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|DiffView.noStaging WrapPanel#FileActions"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|DiffView.noStaging MenuItem#StageSelectedMenuItem"><Setter Property="IsVisible" Value="False" /></Style>
+    <Style Selector="views|DiffView.noStaging MenuItem#UnstageSelectedMenuItem"><Setter Property="IsVisible" Value="False" /></Style>
+
     <Style Selector="views|DiffView.compact Border#FileHeader">
       <Setter Property="IsVisible" Value="{Binding HasSelection}" />
     </Style>
@@ -47,12 +58,14 @@
           <Button Content="Stage all" Command="{Binding StageAllCommand}" Margin="0,0,6,0" />
           <Button Content="Unstage all" Command="{Binding UnstageAllCommand}" />
         </WrapPanel>
-        <WrapPanel x:Name="SelectionToolbar" Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" IsVisible="{Binding HasSelection}">
-          <TextBlock Text="{Binding SelectedLineCount, StringFormat='{}{0} selected'}" VerticalAlignment="Center" Opacity="0.7" Margin="0,0,8,0" />
-          <Button x:Name="StageSelectedButton" Content="Stage selected lines" ToolTip.Tip="Stage the selected lines (S)" Command="{Binding StageSelectedCommand}" IsVisible="{Binding CanStageSelected}" Margin="0,0,6,0" />
-          <Button x:Name="UnstageSelectedButton" Content="Unstage selected lines" ToolTip.Tip="Unstage the selected lines (U)" Command="{Binding UnstageSelectedCommand}" IsVisible="{Binding CanUnstageSelected}" Margin="0,0,6,0" />
-          <Button x:Name="DiscardSelectedButton" Content="Discard selected lines" ToolTip.Tip="Reset the selected lines (R)" Command="{Binding DiscardSelectedCommand}" IsVisible="{Binding CanDiscardSelected}" Margin="0,0,6,0" />
-        </WrapPanel>
+        <Panel x:Name="SelectionToolbarHost" Grid.Row="2" Grid.ColumnSpan="2">
+          <WrapPanel x:Name="SelectionToolbar" Orientation="Horizontal" IsVisible="{Binding HasSelection}">
+            <TextBlock Text="{Binding SelectedLineCount, StringFormat='{}{0} selected'}" VerticalAlignment="Center" Opacity="0.7" Margin="0,0,8,0" />
+            <Button x:Name="StageSelectedButton" Content="Stage selected lines" ToolTip.Tip="Stage the selected lines (S)" Command="{Binding StageSelectedCommand}" IsVisible="{Binding CanStageSelected}" Margin="0,0,6,0" />
+            <Button x:Name="UnstageSelectedButton" Content="Unstage selected lines" ToolTip.Tip="Unstage the selected lines (U)" Command="{Binding UnstageSelectedCommand}" IsVisible="{Binding CanUnstageSelected}" Margin="0,0,6,0" />
+            <Button x:Name="DiscardSelectedButton" Content="Discard selected lines" ToolTip.Tip="Reset the selected lines (R)" Command="{Binding DiscardSelectedCommand}" IsVisible="{Binding CanDiscardSelected}" Margin="0,0,6,0" />
+          </WrapPanel>
+        </Panel>
       </Grid>
     </Border>
 
@@ -82,15 +95,18 @@
             <Border PointerPressed="OnLinePressed"
                     Classes.added="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Added}}"
                     Classes.removed="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Removed}}"
+                    Classes.fileHeader="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Header}}"
                     Classes.hunk="{Binding Kind, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static diff:DiffLineKind.Hunk}}">
               <Grid ColumnDefinitions="44,44,*" Opacity="{Binding Kind, Converter={x:Static views:DiffLineBrushes.TextOpacity}}">
                 <TextBlock Text="{Binding OldNumber}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" Opacity="0.5" TextAlignment="Right" Margin="0,0,6,0" />
                 <TextBlock Grid.Column="1" Text="{Binding NewNumber}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" Opacity="0.5" TextAlignment="Right" Margin="0,0,6,0" />
                 <StackPanel Grid.Column="2" Classes="text" Orientation="Horizontal">
-                  <TextBlock Text="{Binding DisplayText}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap" VerticalAlignment="Center" />
-                  <Button Classes="hunkAction" Content="Stage hunk" Tag="stage" Click="OnHunkAction" IsVisible="{Binding CanStageHunk}" />
-                  <Button Classes="hunkAction" Content="Unstage hunk" Tag="unstage" Click="OnHunkAction" IsVisible="{Binding CanUnstageHunk}" />
-                  <Button Classes="hunkAction" Content="Discard hunk" Tag="discard" Click="OnHunkAction" IsVisible="{Binding CanDiscardHunk}" />
+                  <TextBlock views:SyntaxText.Line="{Binding}" FontFamily="Cascadia Mono, Consolas, DejaVu Sans Mono, monospace" FontSize="{DynamicResource EditorFontSize}" TextWrapping="NoWrap" VerticalAlignment="Center" />
+                  <StackPanel Classes="hunkActions" Orientation="Horizontal">
+                    <Button Classes="hunkAction" Content="Stage hunk" Tag="stage" Click="OnHunkAction" IsVisible="{Binding CanStageHunk}" />
+                    <Button Classes="hunkAction" Content="Unstage hunk" Tag="unstage" Click="OnHunkAction" IsVisible="{Binding CanUnstageHunk}" />
+                    <Button Classes="hunkAction" Content="Discard hunk" Tag="discard" Click="OnHunkAction" IsVisible="{Binding CanDiscardHunk}" />
+                  </StackPanel>
                 </StackPanel>
                 <Border Grid.ColumnSpan="3" Background="{DynamicResource DiffSelectionOverlay}" IsHitTestVisible="False" IsVisible="{Binding IsSelected}" />
               </Grid>

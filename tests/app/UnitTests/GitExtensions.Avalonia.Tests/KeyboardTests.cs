@@ -179,6 +179,14 @@ public class KeyboardTests
                 viewModel.Palette.Close();
                 HideFlyouts(window);
 
+                // The simple mode is a persisted view option: switch back, or every later test would see the simple window.
+                if (command.Id == "view.simpleMode")
+                {
+                    viewModel.IsSimpleMode.Should().BeTrue();
+                    viewModel.ViewOptions.SimpleMode = false;
+                    Pump();
+                }
+
                 // Closing the repository returns to the dashboard: open it again for the gestures that follow.
                 if (command.Id == "repo.close")
                 {

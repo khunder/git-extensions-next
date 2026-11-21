@@ -1,0 +1,276 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GitExtensions.Desktop.ViewModels"
+             xmlns:views="using:GitExtensions.Desktop.Views"
+             x:Class="GitExtensions.Desktop.Views.SimpleToolbarView"
+             x:DataType="vm:MainWindowViewModel">
+
+  <!-- The simple mode's only toolbar, like GitHub Desktop: Current repository | Current branch | one sync button. -->
+  <UserControl.Styles>
+    <StyleInclude Source="avares://GitExtensions.Avalonia/Styles/SimpleGlyphs.axaml" />
+    <Style Selector="Button.segment">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0,0,1,0" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="CornerRadius" Value="0" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="MinHeight" Value="52" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+    </Style>
+    <Style Selector="Button.segment:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+    </Style>
+    <Style Selector="TextBlock.caption">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Opacity" Value="0.65" />
+    </Style>
+    <Style Selector="TextBlock.title">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+    <!-- Drop-down rows: flat, full width, a soft highlight on hover, like GitHub Desktop's lists. -->
+    <Style Selector="Button.pickerRow">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="8,6" />
+      <Setter Property="MinHeight" Value="30" />
+    </Style>
+    <Style Selector="Button.pickerRow:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundListLowBrush}" />
+    </Style>
+    <Style Selector="Button.pickerRow.current /template/ ContentPresenter#PART_ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SystemControlHighlightListAccentLowBrush}" />
+    </Style>
+    <Style Selector="FlyoutPresenter.simplePicker">
+      <Setter Property="BorderBrush" Value="{DynamicResource PopupBorderBrush}" />
+      <Setter Property="Background" Value="{DynamicResource PopupBackground}" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.pickerRow.compact">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+    <Style Selector="TextBlock.groupTitle">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="8,10,8,4" />
+    </Style>
+    <Style Selector="Button.addButton">
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="VerticalAlignment" Value="Stretch" />
+    </Style>
+    <Style Selector="TextBlock.pickerTitle">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="12,10,12,8" />
+    </Style>
+    <Style Selector="TextBlock.pickerSection">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Opacity" Value="0.6" />
+      <Setter Property="Margin" Value="12,2,12,4" />
+    </Style>
+    <Style Selector="FlyoutPresenter.simplePicker">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+    </Style>
+    <Style Selector="Border.countPill">
+      <Setter Property="Background" Value="{DynamicResource TagPillBackground}" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="7,1" />
+    </Style>
+    <Style Selector="Path.syncIcon">
+      <Setter Property="Stroke" Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+      <Setter Property="StrokeThickness" Value="1.6" />
+      <Setter Property="StrokeLineCap" Value="Round" />
+      <Setter Property="StrokeJoin" Value="Round" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border BorderThickness="0,0,0,1" BorderBrush="{DynamicResource SubtleBorderBrush}" Background="{DynamicResource SimpleToolbarBackground}">
+    <Grid x:Name="SegmentColumns" ColumnDefinitions="260,260,260,*,Auto">
+
+      <!-- Current repository: the recent ones, and open another. -->
+      <Button x:Name="SimpleRepositoryButton" Classes="segment" ToolTip.Tip="Change the repository">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <Path Classes="glyph" Data="{StaticResource GlyphRepository}" />
+          <StackPanel Grid.Column="1">
+            <TextBlock Classes="caption" Text="Current repository" />
+            <TextBlock Classes="title" Text="{Binding RepositoryName}" />
+          </StackPanel>
+          <Path Grid.Column="2" Classes="glyph dim" Data="{StaticResource GlyphChevronDown}" />
+        </Grid>
+        <Button.Flyout>
+          <Flyout Placement="BottomEdgeAlignedLeft" FlyoutPresenterClasses="simplePicker" Opening="OnRepositoryFlyoutOpening">
+            <!-- Like GitHub Desktop: filter and Add on top, then Recent and the repositories grouped by GitHub owner. -->
+            <DockPanel x:Name="RepositoryPanel" Width="320" Height="480">
+              <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" ColumnSpacing="8" Margin="10,10,10,6">
+                <TextBox x:Name="SimpleRepositoryFilter" Text="{Binding RepositoryFilter}" PlaceholderText="Filter" />
+                <Button x:Name="SimpleAddRepositoryButton" Grid.Column="1" Classes="addButton">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <TextBlock Text="Add" VerticalAlignment="Center" />
+                    <Path Classes="glyph dim" Data="{StaticResource GlyphChevronDown}" Width="12" Height="12" />
+                  </StackPanel>
+                  <Button.Flyout>
+                    <MenuFlyout Placement="BottomEdgeAlignedRight">
+                      <MenuItem x:Name="SimpleAddCloneItem" Header="Clone repository…" Command="{Binding ShowCloneCommand}" Click="OnFlyoutChoice" />
+                      <MenuItem x:Name="SimpleAddNewItem" Header="Create new repository…" Command="{Binding ShowInitCommand}" Click="OnFlyoutChoice" />
+                      <MenuItem x:Name="SimpleAddExistingItem" Header="Add existing repository…" Command="{Binding BrowseCommand}" Click="OnFlyoutChoice" />
+                    </MenuFlyout>
+                  </Button.Flyout>
+                </Button>
+              </Grid>
+              <TextBlock DockPanel.Dock="Top" Text="No repositories match the filter." Opacity="0.6" Margin="14,8" IsVisible="{Binding HasNoRepositoryMatches}" />
+              <ScrollViewer x:Name="SimpleRepositoryScroll" Padding="4,0,4,8">
+                <ItemsControl x:Name="SimpleRepositoryGroups" ItemsSource="{Binding RepositoryGroups}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:RepositoryListGroup">
+                      <StackPanel>
+                        <TextBlock Classes="groupTitle" Text="{Binding Title}" />
+                        <ItemsControl ItemsSource="{Binding Items}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RepositoryListItem">
+                              <Button Classes="pickerRow compact" Classes.current="{Binding IsCurrent}" ToolTip.Tip="{Binding Path}" Click="OnFlyoutChoice"
+                                      Command="{Binding #RepositoryPanel.((vm:MainWindowViewModel)DataContext).OpenRepositoryFromListCommand}" CommandParameter="{Binding}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                  <Path Classes="glyph dim" Data="{StaticResource GlyphRepository}" />
+                                  <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                              </Button>
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </DockPanel>
+          </Flyout>
+        </Button.Flyout>
+      </Button>
+
+      <!-- Current branch: switch, create, update from main, merge another branch in. -->
+      <Button x:Name="SimpleBranchButton" Grid.Column="1" Classes="segment" ToolTip.Tip="Switch, create or update branches">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <Path Classes="glyph" Data="{StaticResource GlyphBranch}" />
+          <StackPanel Grid.Column="1">
+            <TextBlock Classes="caption" Text="Current branch" />
+            <TextBlock x:Name="SimpleBranchName" Classes="title" Text="{Binding Branch}" />
+          </StackPanel>
+          <Path Grid.Column="2" Classes="glyph dim" Data="{StaticResource GlyphChevronDown}" />
+        </Grid>
+        <Button.Flyout>
+          <Flyout Placement="BottomEdgeAlignedLeft" Closed="OnBranchFlyoutClosed" FlyoutPresenterClasses="simplePicker">
+            <DockPanel Width="340">
+              <TextBlock DockPanel.Dock="Top" Classes="pickerTitle" Text="{Binding BranchPickerTitle}" TextWrapping="Wrap" />
+              <TextBox x:Name="SimpleBranchFilter" DockPanel.Dock="Top" Text="{Binding BranchFilter}" PlaceholderText="Filter branches" Margin="10,0,10,8" />
+
+              <!-- Actions at the bottom, flat like menu rows. -->
+              <Border DockPanel.Dock="Bottom" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SubtleBorderBrush}" Padding="4">
+                <StackPanel>
+                  <StackPanel IsVisible="{Binding !IsMergePicker}">
+                    <Button x:Name="SimpleNewBranchButton" Classes="pickerRow" Command="{Binding CreateBranchCommand}" Click="OnFlyoutChoice">
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Path Classes="glyph" Data="{StaticResource GlyphPlus}" />
+                        <TextBlock Text="New branch…" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+                    <Button x:Name="SimpleUpdateFromDefaultButton" Classes="pickerRow" Command="{Binding UpdateFromDefaultBranchCommand}"
+                            IsVisible="{Binding CanUpdateFromDefaultBranch}" Click="OnFlyoutChoice"
+                            ToolTip.Tip="Bring the latest changes of the main branch into this branch">
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Path Classes="glyph" Data="{StaticResource GlyphUpdate}" />
+                        <TextBlock Text="{Binding UpdateFromDefaultBranchText}" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+                    <Button x:Name="SimpleMergeButton" Classes="pickerRow" Command="{Binding StartMergePickerCommand}">
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Path Classes="glyph" Data="{StaticResource GlyphMerge}" />
+                        <TextBlock Text="Merge another branch into this one…" VerticalAlignment="Center" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+                  <Button Classes="pickerRow" Command="{Binding CancelMergePickerCommand}" IsVisible="{Binding IsMergePicker}">
+                    <TextBlock Text="{Binding PickerCancelText}" Margin="26,0,0,0" />
+                  </Button>
+                </StackPanel>
+              </Border>
+
+              <!-- The branches: the current one checked, like GitHub Desktop. -->
+              <StackPanel>
+                <TextBlock Classes="pickerSection" Text="Branches" />
+                <ScrollViewer MaxHeight="300" Padding="4,0">
+                  <ItemsControl x:Name="SimpleBranchList" ItemsSource="{Binding PickerBranches}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="vm:BranchPickerItem">
+                        <Button Classes="pickerRow" Classes.current="{Binding IsCurrent}" Click="OnFlyoutChoice" ToolTip.Tip="{Binding Name}"
+                                Command="{Binding $parent[ItemsControl].((vm:MainWindowViewModel)DataContext).PickBranchCommand}" CommandParameter="{Binding Name}">
+                          <Grid ColumnDefinitions="16,Auto,*" ColumnSpacing="10">
+                            <Path Classes="glyph" Data="{StaticResource GlyphCheck}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Center" />
+                            <Path Grid.Column="1" Classes="glyph dim" Data="{StaticResource GlyphBranch}" />
+                            <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                       FontWeight="{Binding IsCurrent, Converter={x:Static views:SimpleToolbarView.CurrentWeight}}" />
+                          </Grid>
+                        </Button>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </ScrollViewer>
+              </StackPanel>
+            </DockPanel>
+          </Flyout>
+        </Button.Flyout>
+      </Button>
+
+      <!-- One button that does the right thing: publish, pull, push or fetch. -->
+      <Button x:Name="SimpleSyncButton" Grid.Column="2" Classes="segment" Command="{Binding SyncCommand}" IsEnabled="{Binding CanSync}" ToolTip.Tip="{Binding SyncDetail}">
+        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+          <!-- Drawn icons like GitHub Desktop: circular arrows to fetch, an arrow down to pull, up to push or publish. -->
+          <Panel Width="18" Height="18" VerticalAlignment="Center">
+            <Path Classes="syncIcon" Data="M15,4.5 A7,7 0 1 0 16,10 M15,0.8 V4.8 H11"
+                  IsVisible="{Binding SyncAction, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:SyncAction.Fetch}}" />
+            <Path Classes="syncIcon" Data="M9,1 V16 M3,10 L9,16 L15,10"
+                  IsVisible="{Binding SyncAction, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:SyncAction.Pull}}" />
+            <Path Classes="syncIcon" Data="M9,17 V2 M3,8 L9,2 L15,8"
+                  IsVisible="{Binding SyncAction, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:SyncAction.Push}}" />
+            <Path Classes="syncIcon" Data="M5,13 H4 A3.5,3.5 0 0 1 4.5,6 A5,5 0 0 1 14,5 A3.5,3.5 0 0 1 14.5,13 H13 M9,16 V8 M6,11 L9,8 L12,11"
+                  IsVisible="{Binding SyncAction, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:SyncAction.Publish}}" />
+            <Path Classes="syncIcon" Data="M5,13 H4 A3.5,3.5 0 0 1 4.5,6 A5,5 0 0 1 14,5 A3.5,3.5 0 0 1 14.5,13 H13" Opacity="0.5"
+                  IsVisible="{Binding SyncAction, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:SyncAction.None}}" />
+          </Panel>
+          <StackPanel Grid.Column="1">
+            <TextBlock x:Name="SimpleSyncTitle" Classes="title" Text="{Binding SyncTitle}" />
+            <TextBlock x:Name="SimpleSyncDetail" Classes="caption" Text="{Binding SyncDetail}" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+          <!-- The number of commits to push, like GitHub Desktop's "2 ↑" badge. -->
+          <Border x:Name="SimpleAheadBadge" Grid.Column="2" Classes="countPill" IsVisible="{Binding HasAheadBadge}" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="3">
+              <TextBlock Text="{Binding AheadCount}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" />
+              <Path Classes="glyph" Data="{StaticResource GlyphArrowUp}" Width="12" Height="12" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Button>
+
+      <!-- Everything else stays one click away. -->
+      <Button x:Name="SimpleMoreButton" Grid.Column="4" Classes="segment" BorderThickness="1,0,0,0" Content="⋯" FontSize="18" MinWidth="52" HorizontalContentAlignment="Center" ToolTip.Tip="More">
+        <Button.Flyout>
+          <MenuFlyout Placement="BottomEdgeAlignedRight">
+            <MenuItem x:Name="SimpleOpenFolderItem" Header="Show in file explorer" Command="{Binding OpenFileExplorerCommand}" />
+            <MenuItem x:Name="SimpleOpenShellItem" Header="Open in terminal" Command="{Binding OpenShellCommand}" />
+            <MenuItem x:Name="SimpleSettingsItem" Header="Settings" Command="{Binding OpenSettingsCommand}" />
+            <Separator />
+            <MenuItem x:Name="SimpleFullModeItem" Header="Switch to full mode" Command="{Binding ToggleSimpleModeCommand}" />
+          </MenuFlyout>
+        </Button.Flyout>
+      </Button>
+    </Grid>
+  </Border>
+</UserControl>

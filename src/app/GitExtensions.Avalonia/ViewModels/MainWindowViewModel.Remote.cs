@@ -16,6 +16,10 @@ public sealed partial class MainWindowViewModel
             if (_remote is null)
             {
                 _remote = new RemoteOperationsViewModel(() => _module, message => Status = message, _git.Messages, () => OpenAsync(RepositoryPath), AskPass);
+                _remote.ShowOutputWhenRunning = !IsSimpleMode;
+                _remote.OperationFailed += OnRemoteOperationFailed;
+                _remote.PropertyChanged += (_, _) => NotifySyncChanged();
+                _remote.Remotes.CollectionChanged += (_, _) => NotifySyncChanged();
                 PropertyChanged += (_, e) =>
                 {
                     if (e.PropertyName == nameof(Branch) && Branch is not null)

@@ -155,6 +155,7 @@ public sealed partial class MainWindowViewModel
             // View
             Make("view.sidebar", "Toggle branches sidebar", "View", () => UiRequested?.Invoke(UiTarget.ToggleSidebar), HasRepo, Keys(CommandGesture.Of(Key.B, Ctrl))),
             Make("view.changesTab", "Show the Changes tab", "View", () => SelectSidebarTab(ChangesTabIndex), () => HasRepo() && IsChangesTabEnabled, Keys(CommandGesture.Of(Key.D1, Ctrl))),
+            FromCommand("view.simpleMode", "Switch between simple and full mode", "View", () => ToggleSimpleModeCommand, gestures: Keys(CommandGesture.Of(Key.M, CtrlShift))),
             Make("view.historyTab", "Show the History tab", "View", () => SelectSidebarTab(HistoryTabIndex), () => HasRepo() && IsChangesTabEnabled, Keys(CommandGesture.Of(Key.D2, Ctrl))),
             FromCommand("view.output", "Toggle Output panel", "View", () => Remote.ToggleOutputCommand, HasRepo, Keys(CommandGesture.Of(Key.O, CtrlShift))),
             Make("view.theme", "Cycle theme (system, light, dark, graphite, mist, dusk, sand)", "View", CycleTheme, gestures: Keys(CommandGesture.Of(Key.D, CtrlShift))),

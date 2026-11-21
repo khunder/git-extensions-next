@@ -171,6 +171,8 @@
       </MenuItem>
       </MenuItem>
       <MenuItem x:Name="SplitLayoutMenuItem" Header="Tabs _beside the revision grid" ToggleType="CheckBox" IsChecked="{Binding ViewOptions.SideBySide, Mode=TwoWay}" />
+      <MenuItem x:Name="SimpleModeMenuItem" Header="_Simple mode (GitHub Desktop style)" InputGesture="Ctrl+Shift+M" Command="{Binding ToggleSimpleModeCommand}"
+                ToolTip.Tip="A compact window with only the everyday actions: switch branch, update from main, merge, pull and push" />
       <MenuItem x:Name="ShowChangesTabMenuItem" Header="Changes ta_b in the sidebar (GitHub Desktop style)" ToggleType="CheckBox"
                 IsChecked="{Binding ViewOptions.ShowChangesTab, Mode=TwoWay}"
                 ToolTip.Tip="Changes | History tabs on top of the sidebar: stage with check boxes, commit, stash and discard without the Commit window" />

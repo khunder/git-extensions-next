@@ -2750,11 +2750,23 @@ public sealed partial class GitModule : IGitModule
             })
             .ToList();
 
+    /// <summary>
+    ///  The working tree status like <see cref="GetAllChangedFiles(bool, bool, bool, UntrackedFilesMode, CancellationToken)"/>, but run with
+    ///  <c>--no-optional-locks</c>: git does not rewrite <c>.git/index</c> to refresh its stat cache. Used for background
+    ///  refreshes, which would otherwise trigger the file watcher on the index again and collide with the user's own git commands.
+    /// </summary>
+    public IReadOnlyList<GitItemStatus> GetAllChangedFilesWithoutLocks(CancellationToken cancellationToken = default)
+        => GetAllChangedFiles(true, true, true, UntrackedFilesMode.Default, cancellationToken, noLocks: true);
+
     public IReadOnlyList<GitItemStatus> GetAllChangedFiles(bool excludeIgnoredFiles = true,
         bool excludeAssumeUnchangedFiles = true, bool excludeSkipWorktreeFiles = true,
         UntrackedFilesMode untrackedFiles = UntrackedFilesMode.Default, CancellationToken cancellationToken = default)
+        => GetAllChangedFiles(excludeIgnoredFiles, excludeAssumeUnchangedFiles, excludeSkipWorktreeFiles, untrackedFiles, cancellationToken, noLocks: false);
+
+    private IReadOnlyList<GitItemStatus> GetAllChangedFiles(bool excludeIgnoredFiles, bool excludeAssumeUnchangedFiles, bool excludeSkipWorktreeFiles,
+        UntrackedFilesMode untrackedFiles, CancellationToken cancellationToken, bool noLocks)
     {
-        ExecutionResult exec = GitExecutable.Execute(Commands.GetAllChangedFiles(excludeIgnoredFiles, untrackedFiles), throwOnErrorExit: false, cancellationToken: cancellationToken);
+        ExecutionResult exec = GitExecutable.Execute(Commands.GetAllChangedFiles(excludeIgnoredFiles, untrackedFiles, noLocks: noLocks), throwOnErrorExit: false, cancellationToken: cancellationToken);
         List<GitItemStatus> result = [.. _getAllChangedFilesOutputParser.Parse(exec.StandardOutput)];
         if (!exec.ExitedSuccessfully)
         {

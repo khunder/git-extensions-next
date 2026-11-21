@@ -16,7 +16,7 @@ public static class RevisionGridContextMenu
 {
     public const string ModifyHistoryHelp = "https://git-extensions-documentation.readthedocs.org/en/latest/modify_history.html";
 
-    public static List<Control> Build(MainWindowViewModel vm, CommitItemViewModel commit, IClipboardService? clipboard)
+    public static List<Control> Build(MainWindowViewModel vm, CommitItemViewModel commit, IClipboardService? clipboard, bool offerUndo = false)
     {
         IReadOnlyList<RefBadge> refs = vm.RefsOf(commit);
         List<RefBadge> locals = [.. refs.Where(r => r.Kind == RefBadgeKind.LocalBranch)];
@@ -36,6 +36,15 @@ public static class RevisionGridContextMenu
         void Sidebar() => vm.ShowSidebar();
 
         List<Control> items = [];
+
+        // The simple history offers undoing the newest commit of the branch, like GitHub Desktop: it goes away, its changes stay
+        // staged. The full grid keeps the original menu (its Undo last commit is in the Commands menu).
+        if (offerUndo && commit.IsCurrentHead && !vm.Bisect.IsBisecting)
+        {
+            items.Add(MenuKit.Item("Undo commit…", "ResetWorkingDirChanges", () => _ = vm.UndoLastCommitCommand.ExecuteAsync(null),
+                tip: "Remove this commit and keep its changes, ready to commit again"));
+            items.Add(MenuKit.Sep());
+        }
 
         // Bisect marks (while a bisect runs) come first, like the original.
         if (vm.Bisect.IsBisecting)

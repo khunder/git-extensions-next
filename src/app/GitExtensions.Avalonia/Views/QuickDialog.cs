@@ -38,6 +38,32 @@ public static class QuickDialog
         return dialog;
     }
 
+    /// <summary>Asks a yes/no question and completes with the answer (<see langword="false"/> when closed or cancelled).</summary>
+    public static Task<bool> AskAsync(Window owner, string title, string message, string confirmText, bool destructive = false)
+    {
+        TaskCompletionSource<bool> answer = new();
+        DialogWindow? dialog = null;
+        Button ok = new() { Content = confirmText, MinWidth = 100, IsDefault = true, Name = "QuickDialogConfirm" };
+        if (!destructive)
+        {
+            ok.Classes.Add("accent");
+        }
+
+        Button cancel = new() { Content = "Cancel", MinWidth = 90, IsCancel = true, Name = "QuickDialogCancel" };
+        ok.Click += (_, _) =>
+        {
+            answer.TrySetResult(true);
+            dialog?.Close();
+        };
+        cancel.Click += (_, _) => dialog?.Close();
+
+        // Longer messages (a warning paragraph) get a taller window instead of being cut off.
+        double height = 150 + (Math.Ceiling(message.Length / 70.0) * 20);
+        dialog = Create(owner, title, message, null, [ok, cancel], height: Math.Clamp(height, 170, 360));
+        dialog.Closed += (_, _) => answer.TrySetResult(false);
+        return answer.Task;
+    }
+
     /// <summary>Shows a message with a Close button.</summary>
     public static DialogWindow Notice(Window owner, string title, string message)
     {

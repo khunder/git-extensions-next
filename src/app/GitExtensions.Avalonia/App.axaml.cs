@@ -30,7 +30,12 @@ public sealed class App : Application
             MainWindowViewModel viewModel = new(git, new WindowFolderPicker(window));
             window.DataContext = viewModel;
             viewModel.WindowService = new WindowService(viewModel, window);
+            viewModel.Confirm = (title, message, confirmText) => QuickDialog.AskAsync(window, title, message, confirmText);
             desktop.MainWindow = window;
+
+            // Coming back to the app checks the status again (catches anything the file watcher missed).
+            window.Activated += (_, _) => viewModel.OnWindowActiveChanged(isActive: true);
+            window.Deactivated += (_, _) => viewModel.OnWindowActiveChanged(isActive: false);
 
             // A failure in an event handler or command must not close the application: show it in the error banner.
             Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>

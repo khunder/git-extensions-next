@@ -31,6 +31,7 @@ public sealed partial class MainWindowViewModel
         _loadCancellation?.Cancel();
         _loadCancellation = null;
         _module = null;
+        StopWatching();
 
         if (FileHistory.IsOpen)
         {

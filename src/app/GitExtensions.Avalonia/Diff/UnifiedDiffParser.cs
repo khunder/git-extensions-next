@@ -67,6 +67,7 @@ public static partial class UnifiedDiffParser
             }
         }
 
+        SyntaxHighlighter.Annotate(result);
         return result;
     }
 
@@ -88,6 +89,7 @@ public static partial class UnifiedDiffParser
             result.Add(new DiffLine(DiffLineKind.Added, "+" + lines[i], null, i + 1) { HunkIndex = 0 });
         }
 
+        SyntaxHighlighter.Annotate(result, fileName);
         return result;
     }
 

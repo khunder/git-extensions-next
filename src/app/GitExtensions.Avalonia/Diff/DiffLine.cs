@@ -37,6 +37,9 @@ public sealed record DiffLine(DiffLineKind Kind, string Text, int? OldLineNumber
 
     public int HunkIndex { get; init; } = -1;
 
+    /// <summary>Gets or sets the syntax colors of <see cref="Text"/>; <see langword="null"/> when the line is not colored.</summary>
+    public IReadOnlyList<SyntaxSpan>? Syntax { get; set; }
+
     /// <summary>Gets a value indicating whether this is an added or removed line (the only lines that can be selected).</summary>
     public bool IsChange => Kind is DiffLineKind.Added or DiffLineKind.Removed;
 

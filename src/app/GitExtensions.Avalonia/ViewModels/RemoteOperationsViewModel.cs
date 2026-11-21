@@ -78,6 +78,15 @@ public sealed partial class RemoteOperationsViewModel : ObservableObject
 
     public ObservableCollection<string> Remotes { get; } = [];
 
+    /// <summary>
+    ///  Whether a fetch, pull or push opens the output log by itself. The simple mode turns it off: the log stays hidden
+    ///  until asked for (View &gt; Show output log); the status bar and the error banner still report the result.
+    /// </summary>
+    public bool ShowOutputWhenRunning { get; set; } = true;
+
+    /// <summary>Raised after a fetch, pull or push failed, with its title ("Push") and the error (e.g. to offer another account).</summary>
+    public event Action<string, string>? OperationFailed;
+
     public bool IsIdle => !IsRunning;
 
     public bool HasMultipleRemotes => Remotes.Count > 1;
@@ -234,7 +243,7 @@ public sealed partial class RemoteOperationsViewModel : ObservableObject
         using CancellationTokenSource cancellation = new();
         _cancellation = cancellation;
         IsRunning = true;
-        IsOutputVisible = true;
+        IsOutputVisible = IsOutputVisible || ShowOutputWhenRunning;
         _reportStatus($"{title}…");
         int firstLine;
         lock (_outputLock)
@@ -296,6 +305,7 @@ public sealed partial class RemoteOperationsViewModel : ObservableObject
         if (failure is not null)
         {
             _messages?.ShowError(null, failure, $"{title} failed");
+            OperationFailed?.Invoke(title, failure);
         }
 
         // Keep the buttons disabled while the views reload, then report the outcome last (the reload sets its own status).

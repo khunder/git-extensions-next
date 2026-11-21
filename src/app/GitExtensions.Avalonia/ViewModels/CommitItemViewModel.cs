@@ -60,6 +60,15 @@ public sealed partial class CommitItemViewModel : ObservableObject
 
     public bool HasRefBadges => RefBadges.Count > 0;
 
+    /// <summary>The commit is on this branch but not on its remote yet (shown with an up arrow, like GitHub Desktop).</summary>
+    [ObservableProperty]
+    private bool _isUnpushed;
+
+    /// <summary>The first tag on the commit, shown as a chip in the simple history list; <see langword="null"/> when none.</summary>
+    public string? TagName => RefBadges.FirstOrDefault(badge => badge.Kind == RefBadgeKind.Tag)?.Name;
+
+    public bool HasTag => TagName is not null;
+
     /// <summary>"15 days ago"; the absolute date is <see cref="DateToolTip"/>.</summary>
     public string RelativeDate { get; }
 

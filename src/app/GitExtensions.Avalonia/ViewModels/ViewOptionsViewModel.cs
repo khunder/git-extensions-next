@@ -37,6 +37,14 @@ public sealed partial class ViewOptionsViewModel : ObservableObject
     [ObservableProperty]
     private bool _showChangesTab;
 
+    /// <summary>The simple mode: a compact, GitHub Desktop style window with only everyday actions in plain words.</summary>
+    [ObservableProperty]
+    private bool _simpleMode;
+
+    /// <summary>The simple mode's History shows the full graph (branches tree, revision grid, tabs) instead of the plain list.</summary>
+    [ObservableProperty]
+    private bool _simpleHistoryGraph;
+
     private bool _loading;
 
     public ViewOptionsViewModel(ViewOptionsStore store)
@@ -53,6 +61,8 @@ public sealed partial class ViewOptionsViewModel : ObservableObject
         ShowBuildReportTab = Settings.ShowBuildReportTab;
         ShowFilterBar = Settings.ShowFilterBar;
         ShowChangesTab = Settings.ShowChangesTab;
+        SimpleMode = Settings.SimpleMode;
+        SimpleHistoryGraph = Settings.SimpleHistoryGraph;
         _loading = false;
     }
 
@@ -69,7 +79,7 @@ public sealed partial class ViewOptionsViewModel : ObservableObject
     public void Save(bool showRemoteBranches, bool showTags)
     {
         Settings = new ViewOptionsSettings(
-            CommitInfoPosition, SideBySide, ShowCommitTab, ShowDiffTab, ShowFileTreeTab, ShowConsoleTab, ShowBuildReportTab, showRemoteBranches, showTags, ShowFilterBar, ShowChangesTab);
+            CommitInfoPosition, SideBySide, ShowCommitTab, ShowDiffTab, ShowFileTreeTab, ShowConsoleTab, ShowBuildReportTab, showRemoteBranches, showTags, ShowFilterBar, ShowChangesTab, SimpleMode, SimpleHistoryGraph);
         _store.Save(Settings);
     }
 

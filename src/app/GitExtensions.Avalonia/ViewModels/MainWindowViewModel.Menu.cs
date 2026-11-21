@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GitCommands;
 using GitExtensions.Desktop.Services;
 
 namespace GitExtensions.Desktop.ViewModels;
@@ -286,9 +287,53 @@ public sealed partial class MainWindowViewModel
 
     // ---- Commands ----
 
+    /// <summary>
+    ///  Asks the user a yes/no question (title, message, confirm button text); set by the window. Without it (tests,
+    ///  headless) actions run without asking.
+    /// </summary>
+    public Func<string, string, string, Task<bool>>? Confirm { get; set; }
+
+    /// <summary>
+    ///  Undoes the newest commit of the branch like GitHub Desktop: <c>git reset --soft HEAD~1</c>, so the commit goes away
+    ///  and its changes come back staged, ready to commit again. Asks first (unless switched off in the settings) and warns
+    ///  when the commit is already on a remote, where undoing it means the next push has to force-push.
+    /// </summary>
     [RelayCommand]
-    private Task UndoLastCommitAsync()
-        => HasOpenedRepository ? Remote.RunGitAsync("Undo last commit", ["reset", "--soft", "HEAD~1"]) : Task.CompletedTask;
+    private async Task UndoLastCommitAsync()
+    {
+        if (!HasOpenedRepository || _module is not { } module)
+        {
+            return;
+        }
+
+        (bool hasParent, bool pushed, string subject) = await Task.Run(() =>
+        (
+            module.GitExecutable.Execute("rev-parse --verify --quiet HEAD~1", throwOnErrorExit: false).ExitedSuccessfully,
+            module.GitExecutable.Execute("branch --remotes --contains HEAD", throwOnErrorExit: false).StandardOutput.Trim().Length > 0,
+            module.GitExecutable.Execute("log -1 --format=%s", throwOnErrorExit: false).StandardOutput.Trim()));
+
+        if (!hasParent)
+        {
+            ErrorMessage = "This is the first commit of the repository: there is no earlier commit to go back to.";
+            return;
+        }
+
+        if (!AppSettings.DontConfirmUndoLastCommit.Value && Confirm is { } confirm)
+        {
+            string message = $"Undo \"{subject}\"? The commit is removed and its changes go back to the Changes tab, ready to commit again.";
+            if (pushed)
+            {
+                message += "\n\nThis commit is already on the remote. Undoing it here means your next push has to force-push, and others may already have it.";
+            }
+
+            if (!await confirm("Undo commit", message, "Undo commit"))
+            {
+                return;
+            }
+        }
+
+        await Remote.RunGitAsync("Undo last commit", ["reset", "--soft", "HEAD~1"]);
+    }
 
     [RelayCommand]
     private void ManageStashes()
