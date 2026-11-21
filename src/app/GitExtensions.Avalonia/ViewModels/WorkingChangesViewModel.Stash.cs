@@ -161,6 +161,7 @@ public sealed partial class WorkingChangesViewModel
     private async Task AfterStashChangeAsync()
     {
         await _main.RefreshChangesAsync();
+        await LoadStashesAsync();
         await _main.Stash.LoadAsync();
     }
 }

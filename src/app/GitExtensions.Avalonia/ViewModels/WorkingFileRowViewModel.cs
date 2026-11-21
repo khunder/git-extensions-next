@@ -32,7 +32,7 @@ public sealed partial class WorkingFileRowViewModel : ObservableObject
         Status = shown.Status;
         Description = shown.Description;
         IsConflicted = (unstaged?.IsConflicted ?? false) || (staged?.IsConflicted ?? false);
-        IsIncluded = (unstaged, staged) switch
+        _isIncluded = (unstaged, staged) switch
         {
             (null, not null) => true,
             (not null, null) => false,
@@ -76,8 +76,12 @@ public sealed partial class WorkingFileRowViewModel : ObservableObject
 
     public bool IsConflicted { get; }
 
-    /// <summary><see langword="true"/> when fully staged, <see langword="false"/> when not staged, <see langword="null"/> when partly staged.</summary>
-    public bool? IsIncluded { get; }
+    /// <summary>
+    ///  <see langword="true"/> when fully staged, <see langword="false"/> when not staged, <see langword="null"/> when partly
+    ///  staged. Set right away when the check box is clicked, before git has run, so the click feels instant.
+    /// </summary>
+    [ObservableProperty]
+    private bool? _isIncluded;
 
     /// <summary>Stages the file (unchecked or mixed) or unstages it (checked); with the whole selection when the row is part of it.</summary>
     public IAsyncRelayCommand ToggleCommand { get; }

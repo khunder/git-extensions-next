@@ -199,6 +199,23 @@ public sealed partial class WorkingChangesViewModel : ObservableObject, IDisposa
         }
     }
 
+    /// <summary>
+    ///  Shows a status the main window just read (after staging, unstaging or an automatic refresh) instead of running
+    ///  git status, the branch, the user name and the stash list again: one click used to run about eight git commands.
+    /// </summary>
+    public async Task ShowStatusAsync(IReadOnlyList<ChangedFileViewModel> changes)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        ++_refreshVersion;
+        AllChanges.ReplaceAll(changes);
+        OnPropertyChanged(nameof(HasNoChanges));
+        await RebuildRowsAsync();
+    }
+
     public void Dispose()
     {
         _disposed = true;
@@ -368,9 +385,18 @@ public sealed partial class WorkingChangesViewModel : ObservableObject, IDisposa
     private Task ToggleRowAsync(WorkingFileRowViewModel row)
     {
         IReadOnlyList<WorkingFileRowViewModel> rows = row.IsSelected ? SelectedRows : [row];
-        return row.IsIncluded == true
-            ? UnstageAsync([.. rows.Select(r => r.Staged).OfType<ChangedFileViewModel>()])
-            : StageAsync([.. rows.Select(r => r.Unstaged).OfType<ChangedFileViewModel>()]);
+        bool include = row.IsIncluded != true;
+
+        // Show the new state at once, like GitHub Desktop; the refresh after git ran confirms it (or puts it back).
+        foreach (WorkingFileRowViewModel each in rows)
+        {
+            each.IsIncluded = include;
+        }
+
+        OnPropertyChanged(nameof(AllIncluded));
+        return include
+            ? StageAsync([.. rows.Select(r => r.Unstaged).OfType<ChangedFileViewModel>()])
+            : UnstageAsync([.. rows.Select(r => r.Staged).OfType<ChangedFileViewModel>()]);
     }
 
     private bool CanCommit()

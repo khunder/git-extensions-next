@@ -339,6 +339,83 @@ public class SimpleModeTests
     }
 
     [AvaloniaTest]
+    public async Task A_check_box_click_shows_at_once_and_git_follows()
+    {
+        using TestRepository repository = new();
+        MainWindowViewModel viewModel = CreateViewModel();
+        try
+        {
+            viewModel.ViewOptions.SimpleMode = true;
+            await viewModel.OpenAsync(repository.Path);
+            viewModel.SidebarTabIndex = 0;
+            await WaitUntilAsync(() => viewModel.ChangesTab is { Rows.Count: 2 });
+            WorkingFileRowViewModel row = viewModel.ChangesTab!.Rows.Single(r => r.Name == "a.txt");
+            row.IsIncluded.Should().BeFalse();
+
+            Task toggle = row.ToggleCommand.ExecuteAsync(null);
+
+            // Before git has run: the check box already shows the new state.
+            row.IsIncluded.Should().BeTrue();
+            await toggle;
+
+            await WaitUntilAsync(() => viewModel.ChangesTab.Rows.Single(r => r.Name == "a.txt").IsIncluded == true);
+            repository.GitOutput("diff", "--cached", "--name-only").Trim().Should().Be("a.txt");
+        }
+        finally
+        {
+            viewModel.ViewOptions.SimpleMode = false;
+        }
+    }
+
+    [AvaloniaTest]
+    public async Task Undo_commit_asks_first_and_keeps_the_changes_staged()
+    {
+        using TestRepository repository = new();
+        MainWindowViewModel viewModel = CreateViewModel();
+        await viewModel.OpenAsync(repository.Path);
+        List<string> asked = [];
+        bool answer = false;
+        viewModel.Confirm = (title, message, confirmText) =>
+        {
+            asked.Add(message);
+            return Task.FromResult(answer);
+        };
+
+        // Cancelled: nothing happens.
+        await viewModel.UndoLastCommitCommand.ExecuteAsync(null);
+        asked.Should().ContainSingle().Which.Should().Contain("Add b.txt").And.NotContain("already on the remote");
+        repository.GitOutput("log", "-1", "--format=%s").Trim().Should().Be("Add b.txt");
+
+        // Confirmed: the commit is gone, its file is staged again.
+        answer = true;
+        await viewModel.UndoLastCommitCommand.ExecuteAsync(null);
+        await WaitUntilAsync(() => repository.GitOutput("log", "-1", "--format=%s").Trim() == "Add a.txt");
+        repository.GitOutput("diff", "--cached", "--name-only").Trim().Should().Be("b.txt");
+    }
+
+    [AvaloniaTest]
+    public async Task Undo_commit_warns_when_the_commit_is_already_pushed_and_is_offered_on_the_newest_commit_only()
+    {
+        using TestRepository repository = new();
+        repository.RunGit("update-ref", "refs/remotes/origin/main", "HEAD");
+        MainWindowViewModel viewModel = CreateViewModel();
+        await viewModel.OpenAsync(repository.Path);
+        string? asked = null;
+        viewModel.Confirm = (title, message, confirmText) =>
+        {
+            asked = message;
+            return Task.FromResult(false);
+        };
+
+        await viewModel.UndoLastCommitCommand.ExecuteAsync(null);
+        asked.Should().Contain("already on the remote");
+
+        static IEnumerable<string?> Headers(List<Control> items) => items.OfType<MenuItem>().Select(item => item.Header is TextBlock text ? text.Text : item.Header?.ToString());
+        Headers(GitExtensions.Desktop.Views.ContextMenus.RevisionGridContextMenu.Build(viewModel, viewModel.Commits[0], null, offerUndo: true)).Should().Contain("Undo commit…");
+        Headers(GitExtensions.Desktop.Views.ContextMenus.RevisionGridContextMenu.Build(viewModel, viewModel.Commits[1], null, offerUndo: true)).Should().NotContain("Undo commit…");
+    }
+
+    [AvaloniaTest]
     public async Task The_sync_button_follows_the_state_of_the_branch()
     {
         using TestRepository repository = new();

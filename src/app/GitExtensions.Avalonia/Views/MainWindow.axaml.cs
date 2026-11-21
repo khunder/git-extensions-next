@@ -29,7 +29,7 @@ public sealed partial class MainWindow : Window
         MenuKit.AttachBuilt(
             SimpleHistoryList,
             row => row is CommitItemViewModel commit && DataContext is MainWindowViewModel viewModel
-                ? RevisionGridContextMenu.Build(viewModel, commit, viewModel.Actions.Clipboard ?? new TopLevelClipboardService(this))
+                ? RevisionGridContextMenu.Build(viewModel, commit, viewModel.Actions.Clipboard ?? new TopLevelClipboardService(this), offerUndo: true)
                 : null);
         SimpleHistoryList.KeyDown += (_, e) =>
         {

@@ -255,7 +255,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
                 if (changedPaths.Count > 0 && IsChangesTabSelected && ChangesTab is { } tab)
                 {
-                    await tab.RefreshAsync();
+                    await tab.ShowStatusAsync(current);
                 }
 
                 return;
@@ -313,7 +313,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         if (IsChangesTabSelected && ChangesTab is { } changesTab)
         {
-            await changesTab.RefreshAsync();
+            // Reuse the status just read: the tab does not need to run git status (and more) again.
+            await changesTab.ShowStatusAsync(changes);
         }
     }
 

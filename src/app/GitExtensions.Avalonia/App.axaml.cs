@@ -30,6 +30,7 @@ public sealed class App : Application
             MainWindowViewModel viewModel = new(git, new WindowFolderPicker(window));
             window.DataContext = viewModel;
             viewModel.WindowService = new WindowService(viewModel, window);
+            viewModel.Confirm = (title, message, confirmText) => QuickDialog.AskAsync(window, title, message, confirmText);
             desktop.MainWindow = window;
 
             // Coming back to the app checks the status again (catches anything the file watcher missed).

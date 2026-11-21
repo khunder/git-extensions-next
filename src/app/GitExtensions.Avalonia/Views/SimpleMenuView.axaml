@@ -80,6 +80,8 @@
       <MenuItem x:Name="SimpleStashAllItem" Header="_Stash all changes" Command="{Binding StashAllChangesCommand}">
         <MenuItem.Icon><views:AppIcon IconName="Stash" /></MenuItem.Icon>
       </MenuItem>
+      <MenuItem x:Name="SimpleUndoCommitItem" Header="_Undo last commit…" Command="{Binding UndoLastCommitCommand}"
+                ToolTip.Tip="Remove the newest commit and keep its changes, ready to commit again" />
       <Separator />
       <MenuItem x:Name="SimpleUpdateFromDefaultItem" Header="{Binding UpdateFromDefaultBranchText}" Command="{Binding UpdateFromDefaultBranchCommand}" IsEnabled="{Binding CanUpdateFromDefaultBranch}" />
       <MenuItem x:Name="SimpleMergeIntoCurrentItem" Header="_Merge into current branch…" Command="{Binding ChooseBranchForCommand}" CommandParameter="{x:Static vm:BranchPickerMode.Merge}">
