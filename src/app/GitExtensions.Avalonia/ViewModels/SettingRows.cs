@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace GitExtensions.Desktop.ViewModels;
 
@@ -151,7 +152,7 @@ public abstract partial class ValueRow<T> : SettingRow
 public sealed class BoolRow(string label, Func<bool> get, Action<bool> set, bool immediate = true, string? description = null)
     : ValueRow<bool>(label, get, set, immediate, description);
 
-public sealed class TextRow : ValueRow<string>
+public sealed partial class TextRow : ValueRow<string>
 {
     public TextRow(string label, Func<string> get, Action<string> set, bool immediate = true, string? description = null)
         : base(label, get, set, immediate, description)
@@ -159,6 +160,29 @@ public sealed class TextRow : ValueRow<string>
     }
 
     public string? Watermark { get; init; }
+
+    /// <summary>Values offered in a drop-down; the text stays free to edit.</summary>
+    public IReadOnlyList<string>? Options { get; init; }
+
+    public bool HasOptions => Options is { Count: > 0 };
+
+    /// <summary>Set to offer a Suggest button; returns the value to fill in, or <see langword="null"/> when there is none.</summary>
+    public Func<string?>? Suggest { get; init; }
+
+    public bool CanSuggest => Suggest is not null;
+
+    /// <summary>Raised after <see cref="ApplySuggestion"/> filled in a value.</summary>
+    public event Action<TextRow>? Suggested;
+
+    [RelayCommand]
+    public void ApplySuggestion()
+    {
+        if (Suggest?.Invoke() is { Length: > 0 } value)
+        {
+            Value = value;
+            Suggested?.Invoke(this);
+        }
+    }
 
     /// <summary>Set to offer a Browse button.</summary>
     public BrowseKind Browse { get; init; }

@@ -1,4 +1,5 @@
 using GitCommands;
+using GitCommands.DiffMergeTools;
 using GitExtensions.Desktop.Services;
 
 namespace GitExtensions.Desktop.ViewModels;
@@ -110,12 +111,17 @@ public static partial class SettingsPageCatalog
             page.Rows.Add(Text(store, "commit.template", "Path to the commit template", BrowseKind.File));
             page.Rows.Add(Text(store, "credential.helper", "Credential helper"));
             page.Rows.Add(new HeaderRow("Merge and diff tools"));
-            page.Rows.Add(Text(store, "merge.tool", "Mergetool"));
-            page.Rows.Add(ToolText(store, "merge.tool", "mergetool", "path", "Path to the mergetool", BrowseKind.File));
-            page.Rows.Add(ToolText(store, "merge.tool", "mergetool", "cmd", "Mergetool command"));
-            page.Rows.Add(Text(store, "diff.tool", "Difftool"));
-            page.Rows.Add(ToolText(store, "diff.tool", "difftool", "path", "Path to the difftool", BrowseKind.File));
-            page.Rows.Add(ToolText(store, "diff.tool", "difftool", "cmd", "Difftool command"));
+            page.Rows.Add(new NoticeRow($"{DiffMergeToolSuggestion.RecommendedTool} is the recommended diff and merge tool. Press Suggest to fill in the tool, its path and its command."));
+            foreach (SettingRow row in ToolRows(store, DiffMergeToolType.Merge))
+            {
+                page.Rows.Add(row);
+            }
+
+            foreach (SettingRow row in ToolRows(store, DiffMergeToolType.Diff))
+            {
+                page.Rows.Add(row);
+            }
+
             page.Rows.Add(new HeaderRow("Line endings"));
             page.Rows.Add(new ChoiceRow(
                 "Convert line endings [core.autocrlf]",
@@ -137,20 +143,69 @@ public static partial class SettingsPageCatalog
     private static ChoiceRow Choice(GitConfigStore store, string key, string label, string[] values)
         => new($"{label} [{key}]", values, () => Or(store.Get(key)), v => store.Set(key, v == NotSet ? string.Empty : v), immediate: false);
 
-    // mergetool.<tool>.path and friends: the tool name is whatever the tool row currently says.
-    private static TextRow ToolText(GitConfigStore store, string toolKey, string section, string name, string label, BrowseKind browse = BrowseKind.None)
-        => new(
-            label,
-            () => store.Current(toolKey) is { Length: > 0 } tool ? store.Get($"{section}.{tool}.{name}") : string.Empty,
+    // merge.tool / diff.tool with its mergetool.<tool>.path and .cmd; the tool name is whatever the tool row currently says.
+    private static SettingRow[] ToolRows(GitConfigStore store, DiffMergeToolType toolType)
+    {
+        bool merge = toolType == DiffMergeToolType.Merge;
+        string toolKey = merge ? "merge.tool" : "diff.tool";
+        string section = merge ? "mergetool" : "difftool";
+        string noun = merge ? "mergetool" : "difftool";
+        string recommended = DiffMergeToolSuggestion.RecommendedTool;
+
+        TextRow tool = new($"{(merge ? "Mergetool" : "Difftool")} [{toolKey}]", () => store.Get(toolKey), v => store.Set(toolKey, v.Trim()), immediate: false)
+        {
+            Options = DiffMergeToolSuggestion.Tools(toolType),
+            Watermark = $"{recommended} (recommended)",
+            Suggest = () => DiffMergeToolSuggestion.SuggestTool(toolType),
+        };
+
+        string ToolName() => tool.Value.Trim();
+
+        TextRow path = new(
+            $"Path to the {noun}",
+            () => ToolName() is { Length: > 0 } name ? store.Get($"{section}.{name}.path") : string.Empty,
             v =>
             {
-                if (store.Current(toolKey) is { Length: > 0 } tool)
+                if (ToolName() is { Length: > 0 } name)
                 {
-                    store.Set($"{section}.{tool}.{name}", v);
+                    store.Set($"{section}.{name}.path", v.Trim());
                 }
             },
             immediate: false)
         {
-            Browse = browse,
+            Browse = BrowseKind.File,
+            Suggest = () => DiffMergeToolSuggestion.SuggestPath(ToolName()),
         };
+
+        TextRow command = new(
+            $"{(merge ? "Mergetool" : "Difftool")} command",
+            () => ToolName() is { Length: > 0 } name ? store.Get($"{section}.{name}.cmd") : string.Empty,
+            v =>
+            {
+                if (ToolName() is { Length: > 0 } name)
+                {
+                    store.Set($"{section}.{name}.cmd", v.Trim());
+                }
+            },
+            immediate: false)
+        {
+            Suggest = () => DiffMergeToolSuggestion.SuggestCommand(ToolName(), toolType, path.Value),
+        };
+
+        // Another tool: show what is configured for it.
+        tool.Changed += _ =>
+        {
+            path.Load();
+            command.Load();
+        };
+
+        // Suggesting the tool fills in the rest too, like the original.
+        tool.Suggested += _ =>
+        {
+            path.ApplySuggestion();
+            command.ApplySuggestion();
+        };
+
+        return [tool, path, command];
+    }
 }

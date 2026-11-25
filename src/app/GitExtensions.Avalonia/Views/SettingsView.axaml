@@ -94,9 +94,15 @@
                     <Border Classes.match="{Binding IsMatch}" Padding="4,2" CornerRadius="3">
                       <StackPanel Spacing="2">
                         <TextBlock Text="{Binding Label}" TextWrapping="Wrap" />
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="6">
-                          <TextBox Text="{Binding Value, Mode=TwoWay}" PlaceholderText="{Binding Watermark}" IsEnabled="{Binding IsEnabled}" />
-                          <Button Grid.Column="1" Content="Browse…" IsVisible="{Binding CanBrowse}" IsEnabled="{Binding IsEnabled}"
+                        <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="6">
+                          <TextBox Text="{Binding Value, Mode=TwoWay}" PlaceholderText="{Binding Watermark}" IsEnabled="{Binding IsEnabled}"
+                                   IsVisible="{Binding !HasOptions}" />
+                          <ComboBox IsEditable="True" HorizontalAlignment="Stretch" ItemsSource="{Binding Options}"
+                                    Text="{Binding Value, Mode=TwoWay}" PlaceholderText="{Binding Watermark}" IsEnabled="{Binding IsEnabled}"
+                                    IsVisible="{Binding HasOptions}" />
+                          <Button Grid.Column="1" Content="Suggest" IsVisible="{Binding CanSuggest}" IsEnabled="{Binding IsEnabled}"
+                                  Command="{Binding ApplySuggestionCommand}" />
+                          <Button Grid.Column="2" Content="Browse…" IsVisible="{Binding CanBrowse}" IsEnabled="{Binding IsEnabled}"
                                   Command="{Binding $parent[local:SettingsView].((vm:SettingsViewModel)DataContext).BrowseCommand}" CommandParameter="{Binding}" />
                         </Grid>
                         <TextBlock Text="{Binding Description}" IsVisible="{Binding HasDescription}" Opacity="0.7" FontSize="12" TextWrapping="Wrap" />
