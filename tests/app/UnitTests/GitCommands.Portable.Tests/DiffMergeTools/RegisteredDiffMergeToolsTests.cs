@@ -8,7 +8,7 @@ public class RegisteredDiffMergeToolsTests
     {
         IEnumerable<string> tools = RegisteredDiffMergeTools.All(DiffMergeToolType.Diff);
 
-        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "TortoiseGitIDiff", "vscode", "vsdiffmerge", "winmerge");
+        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "diffweave", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "TortoiseGitIDiff", "vscode", "vsdiffmerge", "winmerge");
     }
 
     [Test]
@@ -16,6 +16,6 @@ public class RegisteredDiffMergeToolsTests
     {
         IEnumerable<string> tools = RegisteredDiffMergeTools.All(DiffMergeToolType.Merge);
 
-        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "tortoisemerge", "vscode", "vsdiffmerge", "winmerge");
+        tools.Should().BeEquivalentTo("araxis", "bc", "bc3", "diffmerge", "diffweave", "kdiff3", "meld", "p4merge", "semanticmerge", "smerge", "tortoisediff", "tortoisemerge", "vscode", "vsdiffmerge", "winmerge");
     }
 }
